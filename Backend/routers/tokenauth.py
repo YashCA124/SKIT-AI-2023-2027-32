@@ -5,7 +5,7 @@ from core.security import (
     get_current_claims,
     get_current_refresh_claims,
 )
-from app.schemas.auth import TokenResponse
+from schemas.auth import TokenResponse
 
 router = APIRouter(tags=["tokenauth"])
 

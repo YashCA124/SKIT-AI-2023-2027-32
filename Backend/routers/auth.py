@@ -10,7 +10,8 @@ from geoalchemy2.elements import WKTElement
 from geoalchemy2.shape import to_shape
 from geopy.geocoders import Nominatim
 
-from app.db import get_db
+from core.db import get_db
+
 from core.security import (
     create_access_token,
     create_refresh_token,
@@ -19,17 +20,15 @@ from core.security import (
     blacklist_token,
     bearer_scheme,
 )
-from app.schemas.auth import (
+from schemas.auth import (
     AdminLoginRequest,
     UserLoginRequest,
     RegistrationRequest,
     LoginResponse,
     UserLoginResponse,
 )
-from app.models.user_type import UserType
+from models import UserType
 
-# NOTE: `Admin` / `User` are assumed to be plain SQLAlchemy models
-# (previously Flask-SQLAlchemy models) that live in your models package.
 from models import Admin, User
 
 router = APIRouter(tags=["auth"])
