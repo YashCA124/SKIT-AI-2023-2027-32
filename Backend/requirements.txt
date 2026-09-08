@@ -1,0 +1,12 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+geoalchemy2
+shapely
+redis
+python-jose[cryptography]
+pydantic[email]
+werkzeug
+geopy
+python-multipart
