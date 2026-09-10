@@ -1,6 +1,24 @@
 import requests
 
+import pandas as pd
+import os
 
+
+def save_raw_data(bookings, path):
+
+    os.makedirs(
+        os.path.dirname(path),
+        exist_ok=True
+    )
+
+    df = pd.DataFrame(bookings)
+
+    df.to_csv(
+        path,
+        index=False
+    )
+
+    return df
 def fetch_bookings(api_url):
 
     response = requests.get(
