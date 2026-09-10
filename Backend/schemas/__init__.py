@@ -8,6 +8,7 @@ from .auth import (
     LoginResponse,
     UserLoginResponse,
 )
+from .lotschema import FloorCreate, LotCreate
 
 __all__ = [
     "AdminLoginRequest",
@@ -18,4 +19,6 @@ __all__ = [
     "UserOut",
     "LoginResponse",
     "UserLoginResponse",
+    "FloorCreate",
+    "LotCreate"
 ]
