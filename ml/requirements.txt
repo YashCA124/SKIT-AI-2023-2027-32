@@ -2,3 +2,5 @@ pandas
 numpy
 requests
 python-dotenv
+celery
+redis
