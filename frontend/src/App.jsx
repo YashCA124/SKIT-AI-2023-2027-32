@@ -1,90 +1,113 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import './App.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin
 
 function App() {
   const [status, setStatus] = useState('checking')
-  const [message, setMessage] = useState('Checking service health...')
   const [details, setDetails] = useState(null)
+  const [lastChecked, setLastChecked] = useState(null)
 
-  useEffect(() => {
-    let isMounted = true
+  const checkHealth = useCallback(async (signal) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`, {
+        headers: { Accept: 'application/json' },
+        signal,
+      })
 
-    const checkHealth = async () => {
-      try {
-        const response = await fetch(`${API_BASE_URL}/health`, {
-          headers: {
-            Accept: 'application/json',
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (isMounted) {
-          setStatus('online')
-          setMessage('Backend is healthy')
-          setDetails(data)
-        }
-      } catch (error) {
-        if (isMounted) {
-          setStatus('offline')
-          setMessage('Backend unavailable')
-          setDetails({ error: error.message })
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
       }
-    }
 
-    checkHealth()
+      const data = await response.json()
 
-    return () => {
-      isMounted = false
+      if (!signal?.aborted) {
+        setStatus('online')
+        setDetails(data)
+        setLastChecked(new Date())
+      }
+    } catch (error) {
+      if (!signal?.aborted && error.name !== 'AbortError') {
+        setStatus('offline')
+        setDetails({ error: error.message })
+        setLastChecked(new Date())
+      }
     }
   }, [])
 
+  useEffect(() => {
+    const controller = new AbortController()
+    const request = window.setTimeout(() => checkHealth(controller.signal), 0)
+
+    return () => {
+      window.clearTimeout(request)
+      controller.abort()
+    }
+  }, [checkHealth])
+
+  const statusCopy = {
+    checking: { label: 'Checking', message: 'Checking service health…' },
+    online: { label: 'Healthy', message: 'All systems operational' },
+    offline: { label: 'Offline', message: 'Unable to reach the backend' },
+  }
+  const currentStatus = statusCopy[status]
+
   return (
     <div className="app-shell">
-      <header className="status-bar">
-        <span className={`status-badge status-badge--${status}`}>
-          {status === 'online' ? 'Healthy' : status === 'offline' ? 'Offline' : 'Checking'}
-        </span>
-        <span className="status-text">{message}</span>
+      <header className="topbar">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true">P</span>
+          <span>Parkwise</span>
+        </div>
+        <span className="environment-tag">{import.meta.env.MODE}</span>
       </header>
 
-      <main className="card">
-        <p className="eyebrow">Parking App</p>
-        <h1>Deployment Status</h1>
-        <p className="subtext">Frontend mode: {import.meta.env.MODE}</p>
+      <main className="dashboard">
+        <section className="hero">
+          <p className="eyebrow">System overview</p>
+          <h1>Service status</h1>
+          <p className="subtext">A quick look at the parking platform’s availability.</p>
+        </section>
 
-        {details && (
-          <div className="meta">
-            {details.service && (
-              <p>
-                <strong>Service:</strong> {details.service}
-              </p>
-            )}
-            {details.environment && (
-              <p>
-                <strong>Environment:</strong> {details.environment}
-              </p>
-            )}
-            {details.timestamp && (
-              <p>
-                <strong>Last check:</strong> {new Date(details.timestamp).toLocaleString()}
-              </p>
-            )}
-            {details.error && (
-              <p className="error">
-                <strong>Issue:</strong> {details.error}
-              </p>
-            )}
+        <section className={`status-card status-card--${status}`} aria-live="polite">
+          <div className="status-heading">
+            <span className="status-indicator" aria-hidden="true" />
+            <div>
+              <p className="status-label">{currentStatus.label}</p>
+              <p className="status-message">{currentStatus.message}</p>
+            </div>
           </div>
-        )}
+          <button
+            className="refresh-button"
+            type="button"
+            onClick={() => {
+              setStatus('checking')
+              checkHealth()
+            }}
+            disabled={status === 'checking'}
+          >
+            {status === 'checking' ? 'Checking…' : 'Check again'}
+          </button>
+        </section>
+
+        <section className="details-card" aria-label="Service details">
+          <div className="detail-row">
+            <span>Service</span>
+            <strong>{details?.service || 'Parking API'}</strong>
+          </div>
+          <div className="detail-row">
+            <span>Environment</span>
+            <strong>{details?.environment || import.meta.env.MODE}</strong>
+          </div>
+          <div className="detail-row">
+            <span>Last checked</span>
+            <strong>{lastChecked ? lastChecked.toLocaleTimeString() : 'Not checked yet'}</strong>
+          </div>
+          {details?.error && <p className="error">Issue: {details.error}</p>}
+        </section>
       </main>
+
+      <footer className="footer">Parking platform · API endpoint {API_BASE_URL}/health</footer>
     </div>
   )
 }
