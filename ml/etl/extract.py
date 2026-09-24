@@ -4,11 +4,20 @@ import pandas as pd
 import os
 
 
-def save_raw_data(bookings, path):
+def save_raw_data(bookings, directory):
 
     os.makedirs(
-        os.path.dirname(path),
+        directory,
         exist_ok=True
+    )
+
+    timestamp = pd.Timestamp.now().strftime(
+        "%Y%m%d_%H%M%S"
+    )
+
+    path = (
+        f"{directory}/"
+        f"bookings_{timestamp}.csv"
     )
 
     df = pd.DataFrame(bookings)

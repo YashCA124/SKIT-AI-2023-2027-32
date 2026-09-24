@@ -12,7 +12,9 @@ BOOKINGS_ENDPOINT = (
     f"{BACKEND_URL}/api/ml/bookings"
 )
 
-RAW_DATA_PATH = "data/raw/bookings.csv"
+RAW_DATA_PATH = (
+    "data/raw/bookings.csv"
+)
 
 PROCESSED_DATA_PATH = (
     "data/processed/booking_features.csv"
