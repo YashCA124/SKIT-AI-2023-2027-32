@@ -180,6 +180,18 @@ h1 {
   text-align: right;
 }
 
+.readiness-value--ready {
+  color: #86efac;
+}
+
+.readiness-value--degraded {
+  color: #fcd34d;
+}
+
+.readiness-value--unavailable {
+  color: #fda4af;
+}
+
 .error {
   margin: 14px 0 10px;
   color: #fda4af;
