@@ -1,4 +1,7 @@
-.PHONY: up down logs build config ps
+.PHONY: up down logs build config ps validate health wait status backup-db
+
+PYTHON ?= python3
+OPS := $(PYTHON) devops/scripts/parkmate_ops.py
 
 up:
 	docker compose up --build -d
@@ -17,3 +20,18 @@ config:
 
 ps:
 	docker compose ps
+
+validate:
+	$(OPS) validate-env
+
+health:
+	$(OPS) health
+
+wait:
+	$(OPS) wait
+
+status:
+	$(OPS) status
+
+backup-db:
+	$(OPS) backup-db

@@ -30,6 +30,9 @@ dist/
 dist-ssr/
 build/
 
+# Local database dumps
+devops/backups/*.sql
+
 # Logs and OS
 *.log
 .DS_Store
