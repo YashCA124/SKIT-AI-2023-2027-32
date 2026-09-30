@@ -1,10 +1,13 @@
+import os
+
 from celery import Celery
-from celery.schedules import crontab
+
+redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
 app = Celery(
     "parking_ml",
-    broker="redis://localhost:6379/0",
-    backend="redis://localhost:6379/0"
+    broker=redis_url,
+    backend=redis_url,
 )
 
 app.conf.timezone = "Asia/Kolkata"
