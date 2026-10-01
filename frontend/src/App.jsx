@@ -231,11 +231,17 @@ function RegistrationForm({ onSubmit, onLogin, pending, notice, noticeType }) {
   )
 }
 
-function ServiceStatus({ status, details, lastChecked, onRefresh }) {
+function ServiceStatus({ status, details, readiness, lastChecked, onRefresh }) {
   const statusCopy = {
     checking: { label: 'Checking', message: 'Checking service health…' },
     online: { label: 'Healthy', message: 'The API health endpoint is responding.' },
     offline: { label: 'Unavailable', message: 'Unable to reach the API health endpoint.' },
+  }
+  const readinessCopy = {
+    checking: 'Checking…',
+    ready: 'Configured',
+    degraded: 'Not configured',
+    unavailable: 'Unavailable',
   }
   const currentStatus = statusCopy[status]
 
@@ -272,11 +278,20 @@ function ServiceStatus({ status, details, lastChecked, onRefresh }) {
           <dd>{details?.environment || import.meta.env.MODE}</dd>
         </div>
         <div className="detail-row">
+          <dt>Database configuration</dt>
+          <dd className={`readiness-value readiness-value--${readiness.status}`}>
+            {readinessCopy[readiness.status]}
+          </dd>
+        </div>
+        <div className="detail-row">
           <dt>Last checked</dt>
           <dd>{lastChecked ? lastChecked.toLocaleTimeString() : 'Not checked yet'}</dd>
         </div>
       </dl>
       {details?.error && <Alert>{details.error}</Alert>}
+      {readiness.status === 'unavailable' && (
+        <Alert>Readiness information could not be retrieved.</Alert>
+      )}
     </section>
   )
 }
@@ -295,37 +310,54 @@ function App() {
   const [noticeType, setNoticeType] = useState('error')
   const [serviceStatus, setServiceStatus] = useState('checking')
   const [serviceDetails, setServiceDetails] = useState(null)
+  const [readiness, setReadiness] = useState({ status: 'checking', details: null })
   const [lastChecked, setLastChecked] = useState(null)
 
-  const checkHealth = useCallback(async (signal) => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/health`, {
-        headers: { Accept: 'application/json' },
-        signal,
+  const checkServices = useCallback(async (signal) => {
+    const [healthResult, readinessResult] = await Promise.allSettled([
+      apiRequest('/health', { signal }),
+      apiRequest('/ready', { signal }),
+    ])
+
+    if (signal?.aborted) return
+
+    if (healthResult.status === 'fulfilled') {
+      setServiceStatus('online')
+      setServiceDetails(healthResult.value)
+    } else {
+      setServiceStatus('offline')
+      setServiceDetails({
+        error: healthResult.reason instanceof Error ? healthResult.reason.message : 'Request failed',
       })
-      const data = await readResponse(response)
-      if (!signal?.aborted) {
-        setServiceStatus('online')
-        setServiceDetails(data)
-        setLastChecked(new Date())
-      }
-    } catch (error) {
-      if (!signal?.aborted && error.name !== 'AbortError') {
-        setServiceStatus('offline')
-        setServiceDetails({ error: error.message })
-        setLastChecked(new Date())
-      }
     }
+
+    if (readinessResult.status === 'fulfilled') {
+      const details = readinessResult.value
+      setReadiness({
+        status: details.database_configured ? 'ready' : 'degraded',
+        details,
+      })
+    } else {
+      setReadiness({ status: 'unavailable', details: null })
+    }
+
+    setLastChecked(new Date())
   }, [])
 
   useEffect(() => {
     const controller = new AbortController()
-    const request = window.setTimeout(() => checkHealth(controller.signal), 0)
+    const request = window.setTimeout(() => checkServices(controller.signal), 0)
     return () => {
       window.clearTimeout(request)
       controller.abort()
     }
-  }, [checkHealth])
+  }, [checkServices])
+
+  const handleRefresh = () => {
+    setServiceStatus('checking')
+    setReadiness({ status: 'checking', details: null })
+    checkServices()
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -580,11 +612,9 @@ function App() {
             <ServiceStatus
               status={serviceStatus}
               details={serviceDetails}
+              readiness={readiness}
               lastChecked={lastChecked}
-              onRefresh={() => {
-                setServiceStatus('checking')
-                checkHealth()
-              }}
+              onRefresh={handleRefresh}
             />
           </div>
           <p className="dashboard-note">
@@ -602,11 +632,9 @@ function App() {
             <ServiceStatus
               status={serviceStatus}
               details={serviceDetails}
+              readiness={readiness}
               lastChecked={lastChecked}
-              onRefresh={() => {
-                setServiceStatus('checking')
-                checkHealth()
-              }}
+              onRefresh={handleRefresh}
             />
           </section>
           {view === 'register' ? (
@@ -629,7 +657,7 @@ function App() {
         </main>
       )}
 
-      <footer className="footer">Parkwise · API endpoint {API_BASE_URL}/health</footer>
+      <footer className="footer">Parkwise · API endpoints {API_BASE_URL}/health and /ready</footer>
     </div>
   )
 }

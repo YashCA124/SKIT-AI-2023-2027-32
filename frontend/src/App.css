@@ -426,6 +426,23 @@ button:disabled {
 .dashboard-note {
   margin: 18px 0 0;
   color: #91a4c0;
+}
+
+.readiness-value--ready {
+  color: #86efac;
+}
+
+.readiness-value--degraded {
+  color: #fcd34d;
+}
+
+.readiness-value--unavailable {
+  color: #fda4af;
+}
+
+.error {
+  margin: 14px 0 10px;
+  color: #fda4af;
   font-size: 0.86rem;
   line-height: 1.5;
 }
