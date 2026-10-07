@@ -1,4 +1,4 @@
-.PHONY: up down logs build config ps validate health wait status backup-db
+.PHONY: up down logs build config ps validate health wait status backup-db lint test ci
 
 PYTHON ?= python3
 OPS := $(PYTHON) devops/scripts/parkmate_ops.py
@@ -35,3 +35,16 @@ status:
 
 backup-db:
 	$(OPS) backup-db
+
+lint:
+	cd frontend && npm run lint
+	$(PYTHON) -m compileall -q Backend ml
+
+test:
+	cd Backend && PYTHONPATH=. $(PYTHON) -m unittest discover -s tests -v
+
+ci: config lint test
+	docker build -t parkmate-backend ./Backend
+	docker build -t parkmate-frontend ./frontend
+	docker build -t parkmate-celery ./ml
+	docker build -t parkmate-redis ./devops/redis

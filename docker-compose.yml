@@ -3,6 +3,7 @@ name: parkmate
 services:
   postgres:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-parkmate}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parkmate}
@@ -18,9 +19,14 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
+    build:
+      context: ./devops/redis
+    image: parkmate-redis
+    restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -30,6 +36,8 @@ services:
   backend:
     build:
       context: ./Backend
+    image: parkmate-backend
+    restart: unless-stopped
     environment:
       APP_ENV: ${APP_ENV:-development}
       DATABASE_URL: ${DATABASE_URL:-postgresql://parkmate:parkmate@postgres:5432/parkmate}
@@ -47,6 +55,8 @@ services:
   frontend:
     build:
       context: ./frontend
+    image: parkmate-frontend
+    restart: unless-stopped
     ports:
       - "5173:5173"
     depends_on:
@@ -56,6 +66,8 @@ services:
   ml-worker:
     build:
       context: ./ml
+    image: parkmate-celery
+    restart: unless-stopped
     environment:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
       BACKEND_URL: ${BACKEND_URL:-http://backend:8000}
@@ -70,6 +82,7 @@ services:
 
   nginx:
     image: nginx:1.27-alpine
+    restart: unless-stopped
     ports:
       - "80:80"
     volumes:
@@ -80,5 +93,6 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   ml_data:
   ml_outputs:
