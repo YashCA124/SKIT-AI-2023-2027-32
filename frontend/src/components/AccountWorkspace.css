@@ -30,6 +30,9 @@
 .profile-menu__exit { border: 0; padding: 7px; background: transparent; color: #536bd0; font-size: .72rem; font-weight: 750; }
 .profile-menu__exit:disabled { cursor: wait; opacity: .65; }
 .signed-in-content { width: min(100%, 1320px); flex: 1; margin: 0 auto; padding: 32px clamp(20px, 3vw, 42px); }
+.dev-preview-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; border: 1px solid #e8ce8a; border-radius: 10px; padding: 11px 13px; background: #fff8e8; color: #755a1f; font-size: .75rem; line-height: 1.5; }
+.dev-preview-banner a { flex: 0 0 auto; color: #315ce8; font-weight: 750; text-decoration: none; }
+.dev-preview-banner a:hover { text-decoration: underline; }
 
 :root[data-theme='dark'] .signed-in-app { background: #111722; color: #e5eaf3; }
 :root[data-theme='dark'] .workspace-switch { border-color: #354052; background: #1c2634; }
@@ -45,6 +48,8 @@
 :root[data-theme='dark'] .module-unavailable-note p { color: #c9b985; }
 :root[data-theme='dark'] .workspace-topbar { border-color: #2b3544; background: #171f2bf2; }
 :root[data-theme='dark'] .switch-role-button { border-color: #374356; background: #202b3b; color: #d4dceb; }
+:root[data-theme='dark'] .dev-preview-banner { border-color: #625334; background: #302a1d; color: #e8d6a8; }
+:root[data-theme='dark'] .dev-preview-banner a { color: #bdcaff; }
 
 @media (max-width: 900px) {
   .signed-in-app { grid-template-columns: 215px minmax(0, 1fr); }
@@ -63,4 +68,5 @@
 
 @media (max-width: 480px) {
   .breadcrumbs { gap: 6px; font-size: .66rem; }
+  .dev-preview-banner { align-items: flex-start; flex-direction: column; }
 }

@@ -106,8 +106,11 @@ bookings.
 
 After successful API sign-in, role navigation can display explanatory
 unavailable states instead of sample records when the active API does not
-provide the corresponding routes. There is no offline sign-in or fake user
-record mode.
+provide the corresponding routes. A development-only **Preview pages without
+backend** link on the login page lets frontend work inspect role routes using
+clearly labeled fictional, in-memory preview accounts. It makes no auth or
+health requests and is not included in production routes or bundles. Real
+sign-in remains API-backed.
 
 `Backend/main.py` currently mounts auth, token, health, and readiness routers.
 Dashboard source files exist, but the active application does not mount those

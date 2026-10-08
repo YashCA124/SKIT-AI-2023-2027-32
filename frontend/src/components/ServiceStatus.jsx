@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../api/client.js'
+import useAuth from '../auth/useAuth.js'
 import Alert from './Alert.jsx'
 import './ServiceStatus.css'
 
 export default function ServiceStatus() {
+  const { session } = useAuth()
   const [checkVersion, setCheckVersion] = useState(0)
   const [status, setStatus] = useState({
     health: 'checking',
@@ -15,6 +17,7 @@ export default function ServiceStatus() {
   })
 
   useEffect(() => {
+    if (import.meta.env.DEV && session.isPreview) return undefined
     const controller = new AbortController()
     async function checkServices() {
       const [health, readiness] = await Promise.allSettled([
@@ -35,7 +38,18 @@ export default function ServiceStatus() {
     }
     checkServices()
     return () => controller.abort()
-  }, [checkVersion])
+  }, [checkVersion, session.isPreview])
+
+  if (import.meta.env.DEV && session.isPreview) {
+    return (
+      <section className="service-panel" aria-labelledby="service-title">
+        <div className="service-panel__heading">
+          <div><p className="eyebrow">Development preview</p><h2 id="service-title">Service status</h2></div>
+        </div>
+        <p className="section-description">API health and readiness checks are disabled in preview mode.</p>
+      </section>
+    )
+  }
 
   return (
     <section className="service-panel" aria-labelledby="service-title">

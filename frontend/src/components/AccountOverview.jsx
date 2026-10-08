@@ -17,7 +17,7 @@ export default function AccountOverview({ session }) {
         <div>
           <p className="eyebrow">Account overview</p>
           <h1>Welcome, {session.user.name}</h1>
-          <p className="section-description">Signed in through the connected Parkwise API as {role.label}.</p>
+          <p className="section-description">{import.meta.env.DEV && session.isPreview ? `Viewing the development preview as ${role.label}.` : `Signed in through the connected Parkwise API as ${role.label}.`}</p>
         </div>
         <span className="account-role-badge">{role.label}</span>
       </div>

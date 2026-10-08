@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getRoleDetails, ROLE_PAGES } from '../config/rolePages.js'
 import useAuth from '../auth/useAuth.js'
 import AccountOverview from './AccountOverview.jsx'
@@ -60,6 +60,12 @@ export default function AccountWorkspace({ children }) {
         </header>
         <div className="signed-in-content">
           <Alert>{notice}</Alert>
+          {import.meta.env.DEV && session.isPreview && (
+            <div className="dev-preview-banner" role="status">
+              <span><strong>Development preview</strong> — fictional account; API requests are disabled.</span>
+              <Link to="/__preview">Switch preview role</Link>
+            </div>
+          )}
           {children || <AccountOverview session={session} />}
         </div>
       </main>

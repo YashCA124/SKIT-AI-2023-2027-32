@@ -35,6 +35,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!session) return undefined
+    if (import.meta.env.DEV && session.isPreview) return undefined
     let cancelled = false
 
     async function restoreSession() {
@@ -102,10 +103,36 @@ export function AuthProvider({ children }) {
     }
   }
 
+  function beginPreview(role) {
+    if (!import.meta.env.DEV) return
+    const previewNames = {
+      U: 'Preview Driver',
+      M: 'Preview Merchant',
+      A: 'Preview Administrator',
+    }
+    setAuthNotice('')
+    setSessionNotice('')
+    setLogoutNotice('')
+    setIsChecking(false)
+    setSession({
+      isPreview: true,
+      user: {
+        id: `preview-${role.toLowerCase()}`,
+        name: previewNames[role],
+        role,
+      },
+    })
+  }
+
   async function logout() {
     if (!session) return
     setLogoutPending(true)
     setLogoutNotice('')
+    if (import.meta.env.DEV && session.isPreview) {
+      setSession(null)
+      setLogoutPending(false)
+      return
+    }
     const results = await Promise.allSettled([
       logoutCurrent(session.accessToken),
       logoutRefresh(session.refreshToken),
@@ -137,6 +164,7 @@ export function AuthProvider({ children }) {
     logoutNotice,
     logoutPending,
     login,
+    beginPreview,
     logout,
     clearAuthNotice: () => setAuthNotice(''),
   }
