@@ -1,0 +1,7 @@
+.account-type-control { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 0 23px; border: 1px solid #e7ebf2; border-radius: 10px; padding: 4px; background: #f6f8fb; }
+.account-type-control button { min-height: 36px; border: 0; border-radius: 7px; background: transparent; color: #69768a; font-size: .72rem; font-weight: 700; }
+.account-type-control button.account-type-control__active { background: #fff; color: #3458d2; box-shadow: 0 1px 4px #1b2b4518; }
+
+:root[data-theme='dark'] .account-type-control { border-color: #354052; background: #141c28; }
+:root[data-theme='dark'] .account-type-control button { color: #aab5c7; }
+:root[data-theme='dark'] .account-type-control button.account-type-control__active { background: #29385b; color: #d6e0ff; }
