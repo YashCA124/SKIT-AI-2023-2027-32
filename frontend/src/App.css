@@ -33,6 +33,15 @@ button:focus-visible, input:focus-visible { outline: 3px solid #9bbcff; outline-
 .auth-card { padding: clamp(24px, 3.5vw, 38px); }
 .auth-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; }
 .secure-label { color: #98a2b1; font-size: .61rem; font-weight: 800; letter-spacing: .1em; }
+.connection-mode { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-bottom: 1px solid #edf0f5; padding: 0 0 12px; margin: -12px 0 20px; }
+.connection-mode > span { display: inline-flex; align-items: center; gap: 7px; color: #438760; font-size: .58rem; font-weight: 850; letter-spacing: .08em; }
+.connection-mode > span i { width: 7px; height: 7px; border-radius: 50%; background: #36a871; }
+.connection-mode--offline > span { color: #9a7229; }
+.connection-mode--offline > span i { background: #d7a13b; }
+.connection-mode .text-button { font-size: .7rem; }
+.offline-credentials { display: grid; gap: 5px; margin: -5px 0 18px; border: 1px solid #f0e1b8; border-radius: 10px; padding: 11px 12px; background: #fffaf0; color: #705e39; font-size: .7rem; }
+.offline-credentials strong { color: #5e4b25; font-size: .73rem; }
+.offline-credentials small { margin-top: 2px; color: #897950; font-size: .64rem; line-height: 1.45; }
 .auth-card h2, .preview-card h2 { margin: 0; color: #1c2940; font-family: Manrope, sans-serif; font-size: 1.62rem; letter-spacing: -.05em; }
 .form-intro { margin: 8px 0 22px; color: #7a8696; font-size: .9rem; }
 .auth-card form { display: grid; gap: 15px; }
@@ -219,6 +228,14 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
 .activity-summary span, .activity-summary small { color: #8792a2; font-size: .64rem; }
 .activity-summary strong { grid-column: 2; grid-row: 1 / span 2; align-self: center; color: #35445b; font-family: Manrope, sans-serif; font-size: 1.2rem; }
 .activity-summary .positive-change { color: #2c9468; }
+.payment-methods, .payment-history { margin-top: 16px; }
+.payment-method-list { display: grid; gap: 10px; }
+.payment-method-list > div { display: flex; align-items: center; gap: 11px; border: 1px solid #edf0f5; border-radius: 10px; padding: 12px; }
+.payment-method-list > div > span:nth-child(2) { display: grid; flex: 1; gap: 4px; }
+.payment-method-list strong { color: #46546a; font-size: .72rem; }
+.payment-method-list small { color: #8994a4; font-size: .64rem; }
+.payment-method-icon { display: grid; width: 42px; height: 30px; place-items: center; border-radius: 6px; background: #edf2ff; color: #405ecb; font-size: .57rem; font-weight: 900; letter-spacing: .06em; }
+.payment-method-icon--upi { background: #eaf7f0; color: #32835e; }
 .rating-star { color: #d39a2b !important; }
 .operation-list { display: grid; gap: 15px; padding: 5px 0; }
 .operation-list > div { display: flex; align-items: center; gap: 9px; color: #667387; font-size: .68rem; }
@@ -343,8 +360,12 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
 :root[data-theme='dark'] .rate-input input { border-color: #3a4658; background: #141c28; color: #e5eaf3; }
 :root[data-theme='dark'] .role-choice { border-color: #354155; background: #202b3b; color: #e2e9f4; }
 :root[data-theme='dark'] .role-choice:hover { border-color: #7289db; }
+:root[data-theme='dark'] .connection-mode { border-color: #303b4b; }
+:root[data-theme='dark'] .offline-credentials { border-color: #625334; background: #302a1d; color: #e8d6a8; }
+:root[data-theme='dark'] .offline-credentials strong { color: #f1dfb5; }
 :root[data-theme='dark'] .role-choice__text small,
 :root[data-theme='dark'] .field-hint,
+:root[data-theme='dark'] .offline-credentials small,
 :root[data-theme='dark'] .demo-disclaimer,
 :root[data-theme='dark'] .demo-footnote { color: #9aa8ba; }
 :root[data-theme='dark'] .workspace { background: #111722; }
@@ -412,6 +433,9 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
 :root[data-theme='dark'] .service-state small,
 :root[data-theme='dark'] .service-details dt,
 :root[data-theme='dark'] .real-account__card dt { color: #a6b2c3; }
+:root[data-theme='dark'] .payment-method-list > div { border-color: #303b4b; }
+:root[data-theme='dark'] .payment-method-list strong { color: #dce4f0; }
+:root[data-theme='dark'] .payment-method-list small { color: #a6b2c3; }
 :root[data-theme='dark'] .notice--error { border-color: #633a40; background: #3b252a; color: #f2aab1; }
 :root[data-theme='dark'] .notice--success { border-color: #315744; background: #20372b; color: #a4dfbd; }
 :root[data-theme='dark'] .empty-state p { color: #a6b2c3; }
