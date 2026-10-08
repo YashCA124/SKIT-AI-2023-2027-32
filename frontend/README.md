@@ -277,17 +277,18 @@ npm run dev
 Open the local address Vite prints, usually `http://localhost:5173`.
 Keep the terminal running while using the app.
 
-In development, Vite proxies `/auth`, `/tokenauth`, `/health`, and `/ready` to
-FastAPI at `http://localhost:8000`. This means the browser sends requests to
-the Vite origin and does not need cross-origin CORS permission for the local
-setup. The backend still needs to be running for sign-in, registration, and
-real health/readiness results.
+For local development, copy `.env.example` to `.env.local`. Vite then proxies
+`/auth`, `/tokenauth`, `/health`, and `/ready` to the configured
+`VITE_API_PROXY_TARGET` (the example points to `http://localhost:8000`). This
+means the browser sends requests to the Vite origin and does not need
+cross-origin CORS permission for the local setup. The backend still needs to
+be running for sign-in, registration, and real health/readiness results.
 
 ## Configure the API address
 
 ### Change the development proxy target
 
-Create `frontend/.env.local` and set the backend origin:
+Copy `frontend/.env.example` to `frontend/.env.local` and set the backend origin:
 
 ```dotenv
 VITE_API_PROXY_TARGET=http://localhost:8000
@@ -305,10 +306,10 @@ To bypass the development proxy, set `VITE_API_BASE_URL`:
 VITE_API_BASE_URL=https://api.example.com
 ```
 
-When this variable is set, the frontend sends requests directly to that
+When this variable is set, the frontend sends API requests directly to that
 origin. The backend must allow the browser frontend's origin through CORS.
-When it is not set, the browser client defaults to `window.location.origin`;
-in development, Vite's proxy forwards API paths to FastAPI.
+When it is empty, the frontend uses relative API paths; in development, Vite's
+proxy forwards those paths to the configured backend target.
 
 Vite exposes `VITE_` variables to browser code. Do not put passwords,
 private keys, or other server secrets in frontend environment variables.
@@ -332,6 +333,27 @@ The Vite development proxy only runs in development; it is not included in
 API origin or configure a reverse proxy to route API paths to FastAPI. For a
 direct API origin, set `VITE_API_BASE_URL` at **build time**, because Vite
 embeds frontend environment values into the generated JavaScript bundle.
+
+## Deploy the frontend to Vercel
+
+The frontend includes `vercel.json` to route browser-side React Router paths
+back to `index.html`. To connect Vercel:
+
+1. Import this GitHub repository in Vercel and set the project root directory
+   to `frontend`.
+2. Select the Vite framework preset, build command `npm run build`, and output
+   directory `dist`.
+3. Set `VITE_API_BASE_URL` in Vercel's Preview and Production environment
+   settings to the HTTPS origin of the deployed FastAPI API. This is a
+   browser-visible URL, not a secret. If the API is served from the same
+   origin through a reverse proxy, leave it empty.
+4. Deploy a preview, verify the frontend routes, then merge/deploy `main`.
+
+The existing GitHub Actions frontend job runs `npm run lint` and
+`npm run build` for pull requests and pushes to `main`. Vercel can build and
+publish from GitHub after its project is connected. Authentication requests
+from the Vercel domain also require the backend owner to allow that exact
+frontend origin through CORS and make the API reachable over HTTPS.
 
 The frontend `Dockerfile` builds the app and serves the bundle with Vite's
 preview server on port `5173`. It does not start the backend. The root
