@@ -1,16 +1,16 @@
 # Parkwise frontend
 
 This directory contains the web client for Parkwise, a parking application.
-The interface is built with **React 19** and **Vite**. It currently focuses on
-user registration and sign-in, a basic signed-in account page, and backend
-service health/readiness. It is a frontend client: account authentication,
-registration, location storage, and token validation are handled by the
-FastAPI backend.
+The interface is built with **React 19** and **Vite**. It includes connected
+user registration/sign-in plus a backend-independent presentation demo for
+Driver, Merchant, and Administrator dashboards. Demo actions and sample data
+are local to the browser and are never sent to the backend.
 
 ## Table of contents
 
 - [Frontend at a glance](#frontend-at-a-glance)
 - [Screens and user journeys](#screens-and-user-journeys)
+- [Offline role dashboard demo](#offline-role-dashboard-demo)
 - [How the frontend is organized](#how-the-frontend-is-organized)
 - [Backend API integration](#backend-api-integration)
 - [Session and error handling](#session-and-error-handling)
@@ -29,7 +29,7 @@ FastAPI backend.
 | Build tool and dev server | Vite |
 | Language | JavaScript with JSX |
 | Styling | Handwritten CSS; no component or CSS framework |
-| Routing | One React application with sign-in, registration, and dashboard views; no client-side router |
+| Routing | One React application with sign-in, registration, live account, and role dashboard views; no client-side router |
 | API communication | Browser `fetch` calls to FastAPI |
 | Client-side session storage | `sessionStorage` for access token, refresh token, and the small account object returned at sign-in |
 | Main entry point | `src/main.jsx` |
@@ -92,14 +92,27 @@ The current page shows:
 - Service health and readiness.
 - A sign-out action.
 
-The page intentionally does not show parking availability, parking lots, or
-bookings. Although a user-dashboard router exists in the backend source tree,
-it is not registered by the current FastAPI `main.py`, so the frontend has no
-working API endpoint for those details.
+The live account page does not invent parking availability, parking lots, or
+bookings. The presentation dashboard is a separate, explicitly labeled demo
+described below.
+
+### Offline role dashboard demo
+
+The sign-in/registration screen includes **Explore the dashboards**. Select
+Driver, Merchant, or Administrator to open that role's dashboard immediately.
+No API server, account, or network connection is needed for this preview.
+
+The demo includes sample overview metrics, searchable sample parking locations
+and users, sample bookings, and local-only interactions such as booking a
+sample spot, changing a displayed rate, toggling a location status, or
+suspending a sample user. Changes last only while the dashboard is open.
+Sample data and illustrative figures are labeled as demo content and do not
+describe live inventory, users, revenue, or activity. Use **Switch dashboard**
+to change roles or **Exit demo** to return to sign-in.
 
 ### Service status
 
-The service panel is available both before and after sign-in. It calls
+The service panel appears on the live signed-in account page. It calls
 `GET /health` and `GET /ready`, and shows:
 
 - Health status, service name, and environment from `/health`.
@@ -122,16 +135,17 @@ global stylesheet, and renders `App`.
 
 ### Main application (`src/App.jsx`)
 
-The app currently keeps the main screens in one file:
+The app keeps the main screens in one file:
 
 - **`Brand`** renders the Parkwise header brand.
 - **`Alert`** renders accessible error/status messages.
-- **`LoginForm`** renders the sign-in form and registration link.
-- **`RegistrationForm`** renders account fields and optional geolocation
-  consent.
-- **`ServiceStatus`** renders health and readiness information.
-- **`App`** owns view, session, loading, notice, and service-check state and
-  connects the forms to the API.
+- **`AuthScreen`** renders sign-in, registration, and the role preview picker.
+- **`DemoDashboard`** renders the role-specific demo workspace and local
+  sample state.
+- **`UserDashboard`**, **`MerchantDashboard`**, and **`AdminDashboard`**
+  render their respective dashboard views.
+- **`RealAccount`** displays account fields returned by the API.
+- **`App`** owns live session restoration and logout.
 
 There is no URL-based page router. The app switches between the login,
 registration, loading, and signed-in dashboard views with React state.
@@ -144,17 +158,16 @@ uses `fetch`, sets JSON headers when needed, and passes responses to
 including validation errors, and produces a visible error when the response
 is not successful or cannot be read.
 
-The `App` component holds the shared state: selected view, signed-in session,
-session restoration, pending form/logout action, user notices, health/readiness
-results, and the last check time. The forms own only their local input state,
-such as whether location permission was opted into.
+The `App` component owns live account session state. The demo dashboards keep
+their sample records in React state only; the two modes are independent.
 
 ### Styles (`src/App.css` and `src/index.css`)
 
 `src/index.css` applies global box sizing, page sizing, and base typography.
 `src/App.css` contains the app theme, auth and dashboard layouts, form styling,
-service-status states, notices, and responsive breakpoints. On smaller screens
-the two-column sign-in layout and dashboard stack into one column.
+notices, and responsive breakpoints. It uses system fonts and requires no
+external font download. On smaller screens the sign-in layout and dashboard
+navigation adapt to one column.
 
 ### Vite and project files
 
@@ -223,7 +236,8 @@ responsible for validating tokens and authorizing protected actions.
 - Node.js compatible with the versions used by this Vite project.
 - npm.
 - The FastAPI backend running at `http://localhost:8000` (the default proxy
-  target). The backend may also require its database and Redis services.
+  target) is needed for registration, sign-in, and live service status. It is
+  not needed to preview the three role dashboards.
 
 ### Start the development server
 
@@ -310,16 +324,14 @@ the auth and dashboard columns.
 
 ## Current scope and limitations
 
-- This is a user-facing auth frontend, not a complete parking management UI.
+- The offline role dashboards are presentation demos, not production
+  management tools; their metrics and records are illustrative sample data.
+- Sign-in and registration still require the FastAPI backend.
 - There is no Google sign-in or other third-party identity flow.
-- There are no user-facing screens for parking search, availability, booking,
-  payment, or booking history.
-- The currently mounted backend does not provide the user-dashboard endpoint
-  needed to populate real user bookings.
+- Live authenticated parking search, availability, bookings, payments, and
+  merchant/admin management are not wired to API endpoints.
 - The app has no client-side router; reloading returns to the app's initial
   view and then restores a valid tab session if one exists.
-- The service panel depends on the backend implementing `/health` and `/ready`
-  at the configured origin or proxy paths.
 
 ## Commands
 
@@ -335,11 +347,9 @@ Run these commands from `frontend/`:
 
 ## Explaining the frontend in a presentation
 
-> The Parkwise frontend is a React application built with Vite. Its current
-> user flow lets a person register with their contact and location details,
-> sign in against the FastAPI backend, and view their returned account
-> information. Access and refresh tokens are stored only for the browser tab's
-> session, checked and refreshed through the backend, and revoked on sign-out.
-> The app also displays live API health and database readiness. The frontend
-> does not invent parking or booking information; those screens can be added
-> when the backend exposes the corresponding user APIs.
+> The Parkwise frontend is built with React and Vite. People can explore
+> Driver, Merchant, and Administrator dashboard designs in an interactive,
+> backend-independent presentation mode. The demo uses clearly labeled sample
+> records and local-only interactions. Registration and real sign-in are
+> connected to FastAPI; the live signed-in page shows returned account details
+> without pretending sample parking data is live.
