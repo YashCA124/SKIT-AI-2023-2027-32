@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Parking App API")
 
-
 @app.get("/health")
 def health_check():
     return {
@@ -56,7 +55,6 @@ def readiness_check():
             "environment": os.getenv("APP_ENV", "development"),
         },
     )
-
 
 app.include_router(auth_router, prefix="/auth")
 app.include_router(tokenauth_router, prefix="/tokenauth")
