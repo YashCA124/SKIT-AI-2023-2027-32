@@ -76,6 +76,11 @@ export default function Login() {
       {!adminLogin && (
         <p className="switch-prompt">New to Parkwise? <Link className="text-button" to="/register">Create an account</Link></p>
       )}
+      {import.meta.env.DEV && (
+        <p className="switch-prompt">
+          Testing the frontend? <Link className="text-button" to="/__preview">Preview pages without backend</Link>
+        </p>
+      )}
     </AuthLayout>
   )
 }
