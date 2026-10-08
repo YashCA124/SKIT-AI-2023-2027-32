@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { ROLE_DETAILS } from '../config/rolePages.js'
 import useAuth from '../auth/useAuth.js'
 import AuthLayout from './AuthLayout.jsx'
+import { createDemoData } from '../demo/data.js'
 import './DevPreviewPage.css'
 
 const PREVIEW_ROLES = ['U', 'M', 'A']
@@ -11,7 +12,7 @@ export default function DevPreviewPage() {
   const navigate = useNavigate()
 
   function openPreview(role) {
-    beginPreview(role)
+    beginPreview(role, createDemoData())
     navigate('/account', { replace: true })
   }
 
@@ -31,6 +32,9 @@ export default function DevPreviewPage() {
           </button>
         ))}
       </div>
+      <button className="dev-preview-exit" type="button" onClick={() => navigate('/login', { replace: true })}>
+        Exit preview
+      </button>
     </AuthLayout>
   )
 }

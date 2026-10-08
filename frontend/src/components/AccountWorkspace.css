@@ -33,6 +33,17 @@
 .dev-preview-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; border: 1px solid #e8ce8a; border-radius: 10px; padding: 11px 13px; background: #fff8e8; color: #755a1f; font-size: .75rem; line-height: 1.5; }
 .dev-preview-banner a { flex: 0 0 auto; color: #315ce8; font-weight: 750; text-decoration: none; }
 .dev-preview-banner a:hover { text-decoration: underline; }
+.logout-dialog { width: min(calc(100% - 32px), 420px); border: 1px solid #e5e9f0; border-radius: 18px; padding: 26px; background: #fff; color: #344157; box-shadow: 0 24px 80px #10182840; }
+.logout-dialog::backdrop { background: #11182799; backdrop-filter: blur(3px); }
+.logout-dialog__icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 12px; background: #fff3dc; color: #a66a10; font-size: 1.1rem; font-weight: 850; }
+.logout-dialog h2 { margin: 17px 0 8px; color: #25324a; font-size: 1.1rem; }
+.logout-dialog p { margin: 0; color: #69768a; font-size: .83rem; line-height: 1.6; }
+.logout-dialog__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+.logout-dialog__actions button { min-height: 40px; border-radius: 9px; padding: 0 14px; font: inherit; font-size: .77rem; font-weight: 750; }
+.logout-dialog__cancel { border: 1px solid #e0e5ed; background: #fff; color: #58667b; }
+.logout-dialog__confirm { border: 1px solid #bc3e47; background: #c84b55; color: #fff; }
+.logout-dialog__actions button:focus-visible { outline: 3px solid #8fa5ff; outline-offset: 2px; }
+.logout-dialog__actions button:disabled { cursor: wait; opacity: .65; }
 
 :root[data-theme='dark'] .signed-in-app { background: #111722; color: #e5eaf3; }
 :root[data-theme='dark'] .workspace-switch { border-color: #354052; background: #1c2634; }
@@ -50,6 +61,10 @@
 :root[data-theme='dark'] .switch-role-button { border-color: #374356; background: #202b3b; color: #d4dceb; }
 :root[data-theme='dark'] .dev-preview-banner { border-color: #625334; background: #302a1d; color: #e8d6a8; }
 :root[data-theme='dark'] .dev-preview-banner a { color: #bdcaff; }
+:root[data-theme='dark'] .logout-dialog { border-color: #354052; background: #1c2634; color: #e5eaf3; }
+:root[data-theme='dark'] .logout-dialog h2 { color: #eef2f8; }
+:root[data-theme='dark'] .logout-dialog p { color: #b5c0d0; }
+:root[data-theme='dark'] .logout-dialog__cancel { border-color: #3c485a; background: #222e3e; color: #d5deeb; }
 
 @media (max-width: 900px) {
   .signed-in-app { grid-template-columns: 215px minmax(0, 1fr); }

@@ -17,8 +17,23 @@
 .module-status-card__status { display: inline-flex; border: 1px solid #f0e2b9; border-radius: 99px; padding: 5px 8px; background: #fffaf0; color: #8a6b2b; font-size: .59rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .module-status-card h3 { margin: 12px 0 5px; color: #344158; font-size: .82rem; }
 .module-status-card p { margin: 0; color: #7d899a; font-size: .7rem; line-height: 1.5; }
+.preview-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.preview-summary__item, .preview-pages { border: 1px solid #e8ecf3; border-radius: 16px; padding: 18px; background: #fff; }
+.preview-summary__item span { display: block; color: #7d899a; font-size: .73rem; }
+.preview-summary__item strong { display: block; margin-top: 8px; color: #344158; font-size: 1.55rem; }
+.preview-pages { margin-top: 18px; }
+.preview-pages h2 { margin: 0 0 12px; color: #26354c; font-size: 1rem; }
+.preview-pages > div { display: flex; flex-wrap: wrap; gap: 9px; }
+.preview-pages a { display: inline-flex; min-height: 39px; align-items: center; gap: 10px; border: 1px solid #e0e6f2; border-radius: 9px; padding: 0 11px; color: #4962ce; font-size: .75rem; font-weight: 750; text-decoration: none; }
+.preview-pages a:hover { border-color: #bdcaff; background: #f5f7ff; }
+.preview-pages p { margin: 15px 0 0; color: #7d899a; font-size: .72rem; line-height: 1.5; }
 
 :root[data-theme='dark'] .real-account__card, :root[data-theme='dark'] .module-status-card { border-color: #303b4c; background: #1a2331; box-shadow: 0 10px 34px #0002; }
+:root[data-theme='dark'] .preview-summary__item, :root[data-theme='dark'] .preview-pages { border-color: #303b4c; background: #1a2331; }
+:root[data-theme='dark'] .preview-summary__item span, :root[data-theme='dark'] .preview-pages p { color: #a6b2c3; }
+:root[data-theme='dark'] .preview-summary__item strong, :root[data-theme='dark'] .preview-pages h2 { color: #e0e7f1; }
+:root[data-theme='dark'] .preview-pages a { border-color: #39496c; background: #202d49; color: #c2d0ff; }
+:root[data-theme='dark'] .preview-pages a:hover { background: #29385b; }
 :root[data-theme='dark'] .section-heading h1, :root[data-theme='dark'] .section-heading h2 { color: #edf2fb; }
 :root[data-theme='dark'] .section-description { color: #aab5c7; }
 :root[data-theme='dark'] .real-account__card h2, :root[data-theme='dark'] .module-status-card h3 { color: #e0e7f1; }
@@ -34,4 +49,8 @@
 
 @media (max-width: 480px) {
   .section-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+}
+
+@media (max-width: 760px) {
+  .preview-summary { grid-template-columns: minmax(0, 1fr); }
 }

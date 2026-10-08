@@ -103,7 +103,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  function beginPreview(role) {
+  function beginPreview(role, demoData) {
     if (!import.meta.env.DEV) return
     const previewNames = {
       U: 'Preview Driver',
@@ -121,6 +121,15 @@ export function AuthProvider({ children }) {
         name: previewNames[role],
         role,
       },
+      demoData,
+    })
+  }
+
+  function updatePreviewData(updater) {
+    if (!import.meta.env.DEV) return
+    setSession((current) => {
+      if (!current?.isPreview) return current
+      return { ...current, demoData: updater(current.demoData) }
     })
   }
 
@@ -165,6 +174,7 @@ export function AuthProvider({ children }) {
     logoutPending,
     login,
     beginPreview,
+    updatePreviewData,
     logout,
     clearAuthNotice: () => setAuthNotice(''),
   }

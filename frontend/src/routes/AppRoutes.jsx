@@ -7,6 +7,7 @@ import Login from '../pages/Login.jsx'
 import MerchantDashboard from '../pages/merchant/MerchantDashboard.jsx'
 import Register from '../pages/Register.jsx'
 import UserDashboard from '../pages/user/UserDashboard.jsx'
+import DevDemoRoute from './DevDemoRoute.jsx'
 
 const DevPreviewPage = import.meta.env.DEV
   ? lazy(() => import('../pages/DevPreviewPage.jsx'))
@@ -25,17 +26,17 @@ export default function AppRoutes() {
           <Route path="/" element={<Navigate to="/account" replace />} />
           <Route path="/account" element={<AccountWorkspace />} />
           <Route element={<ProtectedRoute requiredRole="U" />}>
-            <Route path="/user/parking" element={<AccountWorkspace><UserDashboard pageId="parking" /></AccountWorkspace>} />
-            <Route path="/user/bookings" element={<AccountWorkspace><UserDashboard pageId="bookings" /></AccountWorkspace>} />
-            <Route path="/user/payments" element={<AccountWorkspace><UserDashboard pageId="payments" /></AccountWorkspace>} />
+            <Route path="/user/parking" element={<AccountWorkspace><DevDemoRoute role="U" pageId="parking"><UserDashboard pageId="parking" /></DevDemoRoute></AccountWorkspace>} />
+            <Route path="/user/bookings" element={<AccountWorkspace><DevDemoRoute role="U" pageId="bookings"><UserDashboard pageId="bookings" /></DevDemoRoute></AccountWorkspace>} />
+            <Route path="/user/payments" element={<AccountWorkspace><DevDemoRoute role="U" pageId="payments"><UserDashboard pageId="payments" /></DevDemoRoute></AccountWorkspace>} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="M" />}>
-            <Route path="/merchant/locations" element={<AccountWorkspace><MerchantDashboard pageId="locations" /></AccountWorkspace>} />
-            <Route path="/merchant/spaces" element={<AccountWorkspace><MerchantDashboard pageId="spaces" /></AccountWorkspace>} />
+            <Route path="/merchant/locations" element={<AccountWorkspace><DevDemoRoute role="M" pageId="locations"><MerchantDashboard pageId="locations" /></DevDemoRoute></AccountWorkspace>} />
+            <Route path="/merchant/spaces" element={<AccountWorkspace><DevDemoRoute role="M" pageId="spaces"><MerchantDashboard pageId="spaces" /></DevDemoRoute></AccountWorkspace>} />
           </Route>
           <Route element={<ProtectedRoute requiredRole="A" />}>
-            <Route path="/admin/users" element={<AccountWorkspace><AdminDashboard pageId="users" /></AccountWorkspace>} />
-            <Route path="/admin/lots" element={<AccountWorkspace><AdminDashboard pageId="lots" /></AccountWorkspace>} />
+            <Route path="/admin/users" element={<AccountWorkspace><DevDemoRoute role="A" pageId="users"><AdminDashboard pageId="users" /></DevDemoRoute></AccountWorkspace>} />
+            <Route path="/admin/lots" element={<AccountWorkspace><DevDemoRoute role="A" pageId="lots"><AdminDashboard pageId="lots" /></DevDemoRoute></AccountWorkspace>} />
           </Route>
           <Route path="*" element={<Navigate to="/account" replace />} />
         </Route>

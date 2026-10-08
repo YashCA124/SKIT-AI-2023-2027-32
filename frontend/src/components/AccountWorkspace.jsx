@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { getRoleDetails, ROLE_PAGES } from '../config/rolePages.js'
 import useAuth from '../auth/useAuth.js'
@@ -14,11 +15,38 @@ function getInitials(name) {
 export default function AccountWorkspace({ children }) {
   const { session, logout, logoutNotice, logoutPending, sessionNotice } = useAuth()
   const { pathname } = useLocation()
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false)
+  const logoutDialogRef = useRef(null)
+  const cancelLogoutRef = useRef(null)
+  const logoutTriggerRef = useRef(null)
   const role = getRoleDetails(session.user.role)
   const pages = ROLE_PAGES[session.user.role] || []
   const currentPage = pages.find((page) => page.path === pathname)
   const pageTitle = currentPage?.title || role.title
   const notice = logoutNotice || sessionNotice
+  const isPreview = import.meta.env.DEV && session.isPreview
+
+  useEffect(() => {
+    const dialog = logoutDialogRef.current
+    if (!logoutDialogOpen || !dialog) return undefined
+
+    dialog.showModal()
+    cancelLogoutRef.current?.focus()
+    return () => {
+      if (dialog.open) dialog.close()
+      logoutTriggerRef.current?.focus()
+    }
+  }, [logoutDialogOpen])
+
+  function requestLogout(event) {
+    logoutTriggerRef.current = event.currentTarget
+    setLogoutDialogOpen(true)
+  }
+
+  async function confirmLogout() {
+    setLogoutDialogOpen(false)
+    await logout()
+  }
 
   return (
     <div className="signed-in-app">
@@ -42,8 +70,11 @@ export default function AccountWorkspace({ children }) {
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="module-unavailable-note"><strong>Dashboard APIs</strong><p>Not mounted in the current backend.</p></div>
-          <button className="switch-role-button" type="button" onClick={logout} disabled={logoutPending}>
+          <div className="module-unavailable-note">
+            <strong>{isPreview ? 'Fictional demo data' : 'Dashboard APIs'}</strong>
+            <p>{isPreview ? 'Temporary sample content; live services are not used.' : 'Not mounted in the current backend.'}</p>
+          </div>
+          <button className="switch-role-button" type="button" onClick={requestLogout} disabled={logoutPending}>
             {logoutPending ? 'Signing out…' : 'Sign out'}
           </button>
         </div>
@@ -53,22 +84,48 @@ export default function AccountWorkspace({ children }) {
           <div className="breadcrumbs"><span>Parkwise</span><b>/</b><strong>{pageTitle}</strong></div>
           <div className="topbar-actions">
             <ThemeToggle />
-            <button className="profile-menu__exit" type="button" onClick={logout} disabled={logoutPending}>
+            <button className="profile-menu__exit" type="button" onClick={requestLogout} disabled={logoutPending}>
               {logoutPending ? 'Signing out…' : 'Sign out'}
             </button>
           </div>
         </header>
         <div className="signed-in-content">
           <Alert>{notice}</Alert>
-          {import.meta.env.DEV && session.isPreview && (
+          {isPreview && (
             <div className="dev-preview-banner" role="status">
-              <span><strong>Development preview</strong> — fictional account; API requests are disabled.</span>
+              <span><strong>Interactive presentation demo</strong> — fictional accounts and simulated actions; API requests are disabled.</span>
               <Link to="/__preview">Switch preview role</Link>
             </div>
           )}
           {children || <AccountOverview session={session} />}
         </div>
       </main>
+      {logoutDialogOpen && (
+        <dialog
+          aria-describedby="logout-dialog-description"
+          aria-labelledby="logout-dialog-title"
+          className="logout-dialog"
+          onCancel={(event) => {
+            event.preventDefault()
+            setLogoutDialogOpen(false)
+          }}
+          ref={logoutDialogRef}
+        >
+          <div className="logout-dialog__icon" aria-hidden="true">!</div>
+          <h2 id="logout-dialog-title">{isPreview ? 'Exit the presentation demo?' : 'Sign out of Parkwise?'}</h2>
+          <p id="logout-dialog-description">
+            {isPreview
+              ? 'Your fictional sample changes will be discarded when you leave this demo.'
+              : 'You will be signed out on this tab and returned to the login page.'}
+          </p>
+          <div className="logout-dialog__actions">
+            <button className="logout-dialog__cancel" ref={cancelLogoutRef} type="button" onClick={() => setLogoutDialogOpen(false)}>Stay signed in</button>
+            <button className="logout-dialog__confirm" type="button" onClick={confirmLogout} disabled={logoutPending}>
+              {isPreview ? 'Exit demo' : 'Sign out'}
+            </button>
+          </div>
+        </dialog>
+      )}
     </div>
   )
 }
