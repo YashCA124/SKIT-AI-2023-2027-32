@@ -3,8 +3,9 @@
 This directory contains the web client for Parkwise, a parking application.
 The interface is built with **React 19** and **Vite**. It includes API-backed
 user registration/sign-in, administrator sign-in, session handling, a live
-account page, and feature availability screens. It does not generate sample
-accounts, parking records, bookings, payments, or administrative actions.
+account page, and feature availability screens. Development builds also
+include an isolated interactive presentation demo with clearly labeled
+fictional data and simulated actions.
 
 ## Table of contents
 
@@ -96,22 +97,24 @@ The current page shows:
 - The user's name in the welcome message.
 - Account name, account ID, and account type returned by the sign-in API.
 - Service health and readiness.
-- A sign-out action.
+- A sign-out action with a confirmation warning.
 
-The signed-in account page displays only account fields returned by the
-authentication API. It does not invent parking availability, parking lots, or
-bookings.
+In a real signed-in session, the account page displays only account fields
+returned by the authentication API. It does not invent parking availability,
+parking lots, or bookings.
 
 ### Feature availability
 
-After successful API sign-in, role navigation can display explanatory
-unavailable states instead of sample records when the active API does not
-provide the corresponding routes. A development-only **Preview pages without
-backend** link on the login page lets frontend work inspect role routes using
-clearly labeled fictional, in-memory preview accounts. It makes no auth or
-health requests and is not included in production routes or bundles. Real
-sign-in remains API-backed. Use **Exit preview** on the role chooser or
-**Sign out** from a preview page to return to login.
+After successful API sign-in, role navigation displays explanatory
+unavailable states when the active API does not provide the corresponding
+routes. A development-only **Preview pages without backend** link on the
+login page opens an isolated interactive presentation demo. Its fictional
+accounts, parking locations, bookings, and payments are clearly labeled; its
+booking, cancellation, pricing, listing, and account-status controls only
+change temporary in-memory demo state. The demo makes no auth, health,
+reservation, payment, or management API requests and is not included in
+production routes or bundles. Real sign-in remains API-backed. Confirm before
+exiting the demo or signing out.
 
 `Backend/main.py` currently mounts auth, token, health, and readiness routers.
 Dashboard source files exist, but the active application does not mount those
@@ -154,17 +157,19 @@ unauthenticated visitors to sign-in.
 Authentication state and its restore/refresh/logout lifecycle live in
 `auth/AuthContext.jsx`; theme persistence lives in `theme/ThemeContext.jsx`.
 `pages/Login.jsx` and `pages/Register.jsx` are separate API-backed forms.
-`components/AccountWorkspace.jsx` supplies the signed-in shell, with
-`components/AccountOverview.jsx` showing API-returned account details and
-`pages/UnavailablePage.jsx` explaining unavailable APIs. User, merchant, and
-administrator route components live under their respective `pages/` folders.
+`components/AccountWorkspace.jsx` supplies the signed-in shell and sign-out
+confirmation, with `components/AccountOverview.jsx` showing API-returned
+account details or the development demo summary. `pages/UnavailablePage.jsx`
+explains unavailable APIs. Development demo routes are lazy-loaded from
+`routes/DevDemoRoute.jsx`; user, merchant, and administrator demo pages live
+under their respective `pages/` folders.
 
 ### API helpers and state
 
 `api/client.js` chooses the API origin, sends requests, and parses errors.
 `api/auth.js` contains the existing auth/token calls. API response details,
-including FastAPI validation errors, are shown visibly; the frontend does not
-create sample records or simulate protected actions.
+including FastAPI validation errors, are shown visibly. Fictional records and
+simulated actions exist only in the development presentation demo.
 
 ### Styles
 
@@ -182,6 +187,7 @@ breakpoints without an external font download.
 | `src/main.jsx` | React bootstrap and global stylesheet import |
 | `src/App.jsx` | Auth/theme provider composition and route rendering |
 | `src/routes/AppRoutes.jsx` | Explicit login, registration, account, and role routes |
+| `src/routes/DevDemoRoute.jsx` | Development-only lazy switching to simulated demo pages |
 | `src/auth/AuthContext.jsx` | Session verification, refresh, login, logout |
 | `src/api/` | API request client and existing auth endpoint calls |
 | `src/pages/` | Login, registration, and role/unavailable pages |
@@ -338,8 +344,9 @@ the auth and account columns.
 - Sign-in, registration, session verification, logout, and service status
   require the FastAPI backend.
 - Parking, booking, merchant/admin management, and payment views are
-  unavailable because their routes are not mounted/provided by the current
-  API. The frontend does not replace them with sample data.
+  unavailable in live sessions because their routes are not mounted/provided
+  by the current API. Development preview pages use explicitly fictional
+  sample data and simulated actions only; they never represent live records.
 - There is no Google sign-in or other third-party identity flow.
 - The frontend uses explicit React Router paths. Protected paths restore a
   valid tab session on reload and redirect to sign-in when there is no session.
