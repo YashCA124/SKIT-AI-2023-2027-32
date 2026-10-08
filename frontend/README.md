@@ -80,9 +80,10 @@ marks some address fields optional, but the frontend requires city, state,
 and country because the backend uses that address to determine an approximate
 location when the user does not share device coordinates.
 
-If the user enables location sharing, the browser requests geolocation
-permission. If permission is denied, unsupported, or times out, the form shows
-an error and does not send a registration request with missing coordinates.
+When the user checks the location-sharing option, the browser immediately
+requests geolocation permission. If permission is denied, unsupported, or
+times out, the form unchecks the option, shows an error, and does not send a
+registration request with missing coordinates.
 Without device location, the backend geocodes the city/state/country.
 
 After successful registration, the frontend returns to sign-in and displays
