@@ -3,6 +3,7 @@ import './App.css'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || window.location.origin).replace(/\/+$/, '')
 const SESSION_KEY = 'parkwise.auth.session.v1'
+const THEME_KEY = 'parkwise.theme.v1'
 
 const ROLES = {
   user: { label: 'Driver', title: 'Driver dashboard', name: 'Aarav Sharma', initials: 'AS' },
@@ -103,6 +104,22 @@ function Brand({ compact = false }) {
       <span className="brand-mark" aria-hidden="true">P</span>
       {!compact && <span>Parkwise</span>}
     </div>
+  )
+}
+
+function ThemeToggle({ theme, onToggle }) {
+  const nextTheme = theme === 'dark' ? 'light' : 'dark'
+  return (
+    <button
+      className="theme-toggle"
+      type="button"
+      onClick={onToggle}
+      aria-label={`Switch to ${nextTheme} mode`}
+      title={`Switch to ${nextTheme} mode`}
+    >
+      <span aria-hidden="true">{theme === 'dark' ? '☀' : '☾'}</span>
+      <span>{theme === 'dark' ? 'Light mode' : 'Dark mode'}</span>
+    </button>
   )
 }
 
@@ -427,7 +444,7 @@ function AdminDashboard({ page, onNavigate, lots, setLots, users, setUsers, noti
   )
 }
 
-function DemoDashboard({ role, onRoleChange, onExit }) {
+function DemoDashboard({ role, onRoleChange, onExit, theme, onThemeToggle }) {
   const [page, setPage] = useState('overview')
   const [lots, setLots] = useState(() => DEMO_LOTS.map((lot) => ({ ...lot })))
   const [bookings, setBookings] = useState(() => DEMO_BOOKINGS.map((booking) => ({ ...booking })))
@@ -450,7 +467,7 @@ function DemoDashboard({ role, onRoleChange, onExit }) {
       <div className="workspace-main">
         <header className="workspace-topbar">
           <div className="breadcrumbs"><span>Parkwise</span><b>/</b><strong>{roleDetails.title}</strong></div>
-          <div className="topbar-actions"><span className="demo-pill demo-pill--top">DEMO · SAMPLE DATA</span><span className="icon-button" aria-hidden="true">♧<i /></span><span className="topbar-divider" /><div className="profile-menu"><span className={`avatar avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.name}</strong><small>{roleDetails.label}</small></span><button className="profile-menu__exit" onClick={onExit} type="button">Exit demo</button></div></div>
+          <div className="topbar-actions"><span className="demo-pill demo-pill--top">DEMO · SAMPLE DATA</span><ThemeToggle theme={theme} onToggle={onThemeToggle} /><span className="topbar-divider" /><div className="profile-menu"><span className={`avatar avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.name}</strong><small>{roleDetails.label}</small></span><button className="profile-menu__exit" onClick={onExit} type="button">Exit demo</button></div></div>
         </header>
         <main className="workspace-content">
           <div className="demo-banner"><span>ⓘ</span><p><strong>Interactive demo mode</strong> — sample data only. Any changes you make are temporary and stay in this browser session.</p></div>
@@ -532,6 +549,13 @@ function RealAccount({ session, onLogout, onDemo, notice, pending }) {
 
 function App() {
   const [demoRole, setDemoRole] = useState(null)
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'
+    } catch {
+      return 'light'
+    }
+  })
   const [realSession, setRealSession] = useState(() => {
     let savedSession
     try {
@@ -551,6 +575,16 @@ function App() {
   const [logoutPending, setLogoutPending] = useState(false)
   const [sessionChecking, setSessionChecking] = useState(Boolean(realSession))
   const [sessionNotice, setSessionNotice] = useState('')
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    document.documentElement.style.colorScheme = theme
+    try {
+      localStorage.setItem(THEME_KEY, theme)
+    } catch {
+      // Theme still applies for this page load when persistent storage is unavailable.
+    }
+  }, [theme])
 
   useEffect(() => {
     if (!realSession) return undefined
@@ -628,11 +662,11 @@ function App() {
     setLogoutPending(false)
   }
 
-  if (demoRole) return <DemoDashboard key={demoRole} role={demoRole} onRoleChange={() => setDemoRole(null)} onExit={() => setDemoRole(null)} />
-  if (sessionChecking) return <div className="app-shell"><header className="topbar"><Brand /></header><main className="real-account" aria-live="polite">Checking your saved session…</main></div>
-  if (realSession) return <div className="app-shell"><header className="topbar"><Brand /></header><RealAccount session={realSession} onLogout={logout} onDemo={() => setDemoRole('user')} notice={logoutNotice || sessionNotice} pending={logoutPending} /></div>
+  if (demoRole) return <DemoDashboard key={demoRole} role={demoRole} onRoleChange={() => setDemoRole(null)} onExit={() => setDemoRole(null)} theme={theme} onThemeToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} />
+  if (sessionChecking) return <div className="app-shell"><header className="topbar"><Brand /><ThemeToggle theme={theme} onToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} /></header><main className="real-account" aria-live="polite">Checking your saved session…</main></div>
+  if (realSession) return <div className="app-shell"><header className="topbar"><Brand /><ThemeToggle theme={theme} onToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} /></header><RealAccount session={realSession} onLogout={logout} onDemo={() => setDemoRole('user')} notice={logoutNotice || sessionNotice} pending={logoutPending} /></div>
 
-  return <div className="app-shell app-shell--auth"><header className="topbar"><Brand /><span className="environment-tag">PARKING, MADE SIMPLE</span></header><AuthScreen onPreview={setDemoRole} onLogin={(session, warning) => { setRealSession(session); setSessionNotice(warning || ''); setDemoRole(null) }} /></div>
+  return <div className="app-shell app-shell--auth"><header className="topbar"><Brand /><div className="topbar-tools"><ThemeToggle theme={theme} onToggle={() => setTheme((current) => current === 'dark' ? 'light' : 'dark')} /><span className="environment-tag">PARKING, MADE SIMPLE</span></div></header><AuthScreen onPreview={setDemoRole} onLogin={(session, warning) => { setRealSession(session); setSessionNotice(warning || ''); setDemoRole(null) }} /></div>
 }
 
 export default App

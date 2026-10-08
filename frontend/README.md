@@ -38,6 +38,10 @@ are local to the browser and are never sent to the backend.
 The app does not currently use a global state library, form library, or
 third-party UI package. React state and browser APIs are used directly.
 
+The interface includes a light/dark theme control on the sign-in, live account,
+and role dashboard screens. The selected theme is saved in browser
+`localStorage` and restored on the next visit.
+
 ## Screens and user journeys
 
 ### Sign-in

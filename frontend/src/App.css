@@ -237,6 +237,10 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
 .real-account__card dl div { display: flex; justify-content: space-between; border-top: 1px solid #edf0f5; padding: 13px 0; font-size: .8rem; }
 .real-account__card dt { color: #8691a0; }
 .real-account__card dd { margin: 0; color: #3c4a60; font-weight: 700; }
+.topbar-tools { display: flex; align-items: center; gap: 12px; }
+.theme-toggle { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #e2e7f0; border-radius: 9px; padding: 0 11px; background: #fff; color: #536176; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.theme-toggle:hover { border-color: #bdcaff; color: #315ce8; }
+.theme-toggle > span:first-child { font-size: .95rem; }
 .service-panel { margin-top: 16px; border: 1px solid #e8ecf3; border-radius: 16px; padding: 20px; background: #fff; box-shadow: 0 10px 34px #253a620c; }
 .service-panel__heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
 .service-panel__heading .eyebrow { margin-bottom: 5px; }
@@ -276,6 +280,7 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
 @media (max-width: 480px) {
   .app-shell { padding: 17px 14px; }
   .environment-tag { display: none; }
+  .theme-toggle { min-height: 34px; padding: 0 9px; font-size: .68rem; }
   .role-picker { grid-template-columns: minmax(0, 1fr); }
   .role-choice { flex-direction: row; align-items: center; }
   .role-choice__arrow { margin-left: auto; }
@@ -292,6 +297,126 @@ td small { display: block; margin-top: 5px; color: #8c97a6; font-size: .61rem; }
   .demo-banner { margin-bottom: 18px; }
   .table-card { margin-right: -2px; }
 }
+
+:root[data-theme='dark'] {
+  color: #e5eaf3;
+  background: #111722;
+  color-scheme: dark;
+}
+:root[data-theme='dark'] body,
+:root[data-theme='dark'] #root { background: #111722; }
+:root[data-theme='dark'] .app-shell,
+:root[data-theme='dark'] .workspace { background: #111722; color: #e5eaf3; }
+:root[data-theme='dark'] .app-shell--auth { background: radial-gradient(circle at 5% 5%, #202d49 0, transparent 38%), #111722; }
+:root[data-theme='dark'] .brand,
+:root[data-theme='dark'] .auth-intro h1,
+:root[data-theme='dark'] .auth-card h2,
+:root[data-theme='dark'] .preview-card h2,
+:root[data-theme='dark'] .section-heading h2,
+:root[data-theme='dark'] .real-account h1 { color: #edf2fb; }
+:root[data-theme='dark'] .auth-intro__copy,
+:root[data-theme='dark'] .auth-feature-list,
+:root[data-theme='dark'] .form-intro,
+:root[data-theme='dark'] .switch-prompt,
+:root[data-theme='dark'] .preview-copy,
+:root[data-theme='dark'] .section-description { color: #aab5c7; }
+:root[data-theme='dark'] .environment-tag,
+:root[data-theme='dark'] .auth-card,
+:root[data-theme='dark'] .preview-card,
+:root[data-theme='dark'] .panel,
+:root[data-theme='dark'] .metric-card,
+:root[data-theme='dark'] .table-card,
+:root[data-theme='dark'] .real-account__card,
+:root[data-theme='dark'] .service-panel,
+:root[data-theme='dark'] .parking-card { border-color: #303b4c; background-color: #1a2331; box-shadow: 0 10px 34px #00000022; }
+:root[data-theme='dark'] .environment-tag,
+:root[data-theme='dark'] .theme-toggle,
+:root[data-theme='dark'] .secondary-button,
+:root[data-theme='dark'] .switch-role-button,
+:root[data-theme='dark'] .filter-chip,
+:root[data-theme='dark'] .search-box { border-color: #374356; background: #202b3b; color: #d4dceb; }
+:root[data-theme='dark'] .auth-card form > label,
+:root[data-theme='dark'] .form-grid label { color: #c3ccda; }
+:root[data-theme='dark'] .auth-card input,
+:root[data-theme='dark'] .form-grid input,
+:root[data-theme='dark'] .search-box input,
+:root[data-theme='dark'] .rate-input input { border-color: #3a4658; background: #141c28; color: #e5eaf3; }
+:root[data-theme='dark'] .role-choice { border-color: #354155; background: #202b3b; color: #e2e9f4; }
+:root[data-theme='dark'] .role-choice:hover { border-color: #7289db; }
+:root[data-theme='dark'] .role-choice__text small,
+:root[data-theme='dark'] .field-hint,
+:root[data-theme='dark'] .demo-disclaimer,
+:root[data-theme='dark'] .demo-footnote { color: #9aa8ba; }
+:root[data-theme='dark'] .workspace { background: #111722; }
+:root[data-theme='dark'] .sidebar { border-color: #2b3544; background: #171f2b; }
+:root[data-theme='dark'] .sidebar-collapse,
+:root[data-theme='dark'] .workspace-switch { border-color: #354052; background: #1c2634; }
+:root[data-theme='dark'] .workspace-switch strong,
+:root[data-theme='dark'] .breadcrumbs strong,
+:root[data-theme='dark'] .section-heading h2 { color: #e0e7f1; }
+:root[data-theme='dark'] .workspace-switch small,
+:root[data-theme='dark'] .workspace-switch .switch-chevron { color: #9aa8ba; }
+:root[data-theme='dark'] .nav-item { color: #a9b4c5; }
+:root[data-theme='dark'] .nav-item:hover { background: #222e3e; color: #e4ebf5; }
+:root[data-theme='dark'] .nav-item--active { background: #29385b; color: #bdcaff; }
+:root[data-theme='dark'] .nav-item--active .nav-item__icon { color: #a9bcff; }
+:root[data-theme='dark'] .demo-side-note { border-color: #37415c; background: #202a3c; }
+:root[data-theme='dark'] .demo-side-note strong { color: #d4def4; }
+:root[data-theme='dark'] .demo-side-note p { color: #a6b1c2; }
+:root[data-theme='dark'] .workspace-topbar { border-color: #2b3544; background: #171f2bf2; }
+:root[data-theme='dark'] .breadcrumbs,
+:root[data-theme='dark'] .profile-menu strong,
+:root[data-theme='dark'] .metric-value,
+:root[data-theme='dark'] .compact-lot__price,
+:root[data-theme='dark'] .next-booking > div strong,
+:root[data-theme='dark'] .real-account__card h2,
+:root[data-theme='dark'] .real-account__card dd { color: #e0e7f1; }
+:root[data-theme='dark'] .icon-button { border-color: #354052; background: #202b3b; color: #c1ccdc; }
+:root[data-theme='dark'] .topbar-divider { border-color: #364152; }
+:root[data-theme='dark'] .demo-banner { border-color: #625334; background: #302a1d; color: #e8d6a8; }
+:root[data-theme='dark'] .demo-banner strong { color: #f1dfb5; }
+:root[data-theme='dark'] .metric-label,
+:root[data-theme='dark'] .compact-lot__main strong,
+:root[data-theme='dark'] .compact-lot__price,
+:root[data-theme='dark'] .parking-card h3,
+:root[data-theme='dark'] td strong,
+:root[data-theme='dark'] .empty-state strong { color: #dce4f0; }
+:root[data-theme='dark'] .metric-detail,
+:root[data-theme='dark'] .compact-lot__main small,
+:root[data-theme='dark'] .next-booking > div small,
+:root[data-theme='dark'] .parking-card__title p,
+:root[data-theme='dark'] .parking-card__facts,
+:root[data-theme='dark'] td,
+:root[data-theme='dark'] td small,
+:root[data-theme='dark'] .activity-summary span,
+:root[data-theme='dark'] .activity-summary small,
+:root[data-theme='dark'] .operation-list > div { color: #a6b2c3; }
+:root[data-theme='dark'] .compact-lot,
+:root[data-theme='dark'] .activity-summary > div,
+:root[data-theme='dark'] .real-account__card dl div,
+:root[data-theme='dark'] .service-details > div { border-color: #303b4b; }
+:root[data-theme='dark'] .booking-date { border-color: #354052; background: #202b3b; }
+:root[data-theme='dark'] .parking-card__art { background: linear-gradient(135deg, #253452, #202c40 58%, #26364c); }
+:root[data-theme='dark'] .parking-card:nth-child(2n) .parking-card__art { background: linear-gradient(135deg, #233d38, #1d302f 58%, #27423a); }
+:root[data-theme='dark'] th { border-color: #303b4b; background: #202a38; color: #aab5c5; }
+:root[data-theme='dark'] .status-badge--pending { background: #44391f; color: #e6c36e; }
+:root[data-theme='dark'] .status-badge--closed,
+:root[data-theme='dark'] .status-badge--suspended,
+:root[data-theme='dark'] .status-badge--cancelled { background: #48282d; color: #f0a0a6; }
+:root[data-theme='dark'] .status-badge--completed,
+:root[data-theme='dark'] .role-tag { background: #303b4b; color: #c0cada; }
+:root[data-theme='dark'] .status-badge { background: #203b32; color: #85d4ad; }
+:root[data-theme='dark'] .service-state { border-color: #354052; background: #202a38; }
+:root[data-theme='dark'] .service-state strong,
+:root[data-theme='dark'] .service-details dd { color: #d5deeb; }
+:root[data-theme='dark'] .service-state small,
+:root[data-theme='dark'] .service-details dt,
+:root[data-theme='dark'] .real-account__card dt { color: #a6b2c3; }
+:root[data-theme='dark'] .notice--error { border-color: #633a40; background: #3b252a; color: #f2aab1; }
+:root[data-theme='dark'] .notice--success { border-color: #315744; background: #20372b; color: #a4dfbd; }
+:root[data-theme='dark'] .empty-state p { color: #a6b2c3; }
+:root[data-theme='dark'] .workspace-footer { color: #929fb1; }
+:root[data-theme='dark'] .real-account__card dl div { border-color: #303b4b; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
