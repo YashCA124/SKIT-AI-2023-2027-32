@@ -45,6 +45,14 @@ and role screens. The selected theme is saved in browser
 
 ## Screens and user journeys
 
+### Public home page
+
+The root route (`/`) is the public Parkwise landing page. It introduces the
+product, links to sign-in and registration, and explains that live parking
+search and booking are not connected to the current API. Signed-in visitors
+can go directly to their account. The page is responsive and supports the
+saved light/dark theme preference.
+
 ### Sign-in
 
 The sign-in page defaults to an email and password form. The account-type
@@ -149,10 +157,10 @@ global stylesheet, and renders `App`.
 ### Application and page structure
 
 `src/App.jsx` composes the auth and theme providers with `routes/AppRoutes.jsx`.
-The route file maps login, registration, account overview, and each
-role-specific page to React Router URLs. `auth/ProtectedRoute.jsx` restores
-and checks the tab session before rendering protected routes and redirects
-unauthenticated visitors to sign-in.
+The route file maps the public home page, login, registration, account
+overview, and each role-specific page to React Router URLs.
+`auth/ProtectedRoute.jsx` restores and checks the tab session before rendering
+protected routes and redirects unauthenticated visitors to sign-in.
 
 Authentication state and its restore/refresh/logout lifecycle live in
 `auth/AuthContext.jsx`; theme persistence lives in `theme/ThemeContext.jsx`.
@@ -188,6 +196,7 @@ breakpoints without an external font download.
 | `src/App.jsx` | Auth/theme provider composition and route rendering |
 | `src/routes/AppRoutes.jsx` | Explicit login, registration, account, and role routes |
 | `src/routes/DevDemoRoute.jsx` | Development-only lazy switching to simulated demo pages |
+| `src/pages/HomePage.jsx` | Public landing page and account entry points |
 | `src/auth/AuthContext.jsx` | Session verification, refresh, login, logout |
 | `src/api/` | API request client and existing auth endpoint calls |
 | `src/pages/` | Login, registration, and role/unavailable pages |

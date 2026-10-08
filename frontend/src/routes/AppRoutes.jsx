@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import AccountWorkspace from '../components/AccountWorkspace.jsx'
 import ProtectedRoute from '../auth/ProtectedRoute.jsx'
 import AdminDashboard from '../pages/admin/AdminDashboard.jsx'
+import HomePage from '../pages/HomePage.jsx'
 import Login from '../pages/Login.jsx'
 import MerchantDashboard from '../pages/merchant/MerchantDashboard.jsx'
 import Register from '../pages/Register.jsx'
@@ -17,13 +18,13 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         {import.meta.env.DEV && (
           <Route path="/__preview" element={<Suspense fallback={null}><DevPreviewPage /></Suspense>} />
         )}
         <Route element={<ProtectedRoute />}>
-          <Route path="/" element={<Navigate to="/account" replace />} />
           <Route path="/account" element={<AccountWorkspace />} />
           <Route element={<ProtectedRoute requiredRole="U" />}>
             <Route path="/user/parking" element={<AccountWorkspace><DevDemoRoute role="U" pageId="parking"><UserDashboard pageId="parking" /></DevDemoRoute></AccountWorkspace>} />
