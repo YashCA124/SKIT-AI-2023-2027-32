@@ -1,5 +1,6 @@
 fastapi
 uvicorn[standard]
+alembic
 sqlalchemy
 psycopg2-binary
 geoalchemy2

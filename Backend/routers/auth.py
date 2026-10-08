@@ -130,10 +130,13 @@ def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
         email=payload.email,
         phone_no=payload.phone_no,
         password=generate_password_hash(payload.password),
+        address="",
+        pincode="",
         city=payload.city,
         state=payload.state,
         country=payload.country,
         location_permission_granted=payload.location_permission_granted,
+        user_type=UserType.PARKING_USER,
     )
 
     try:

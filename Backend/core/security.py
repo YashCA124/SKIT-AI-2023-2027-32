@@ -9,7 +9,9 @@ from jose import jwt, JWTError
 
 from .redis_client import redis_client
 
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "secret-key")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY must be set before starting the backend.")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
 REFRESH_TOKEN_EXPIRES = timedelta(days=30)

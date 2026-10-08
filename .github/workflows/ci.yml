@@ -41,8 +41,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install backend dependencies
+        run: python -m pip install -r requirements.txt
       - name: Compile Python sources
         run: python -m compileall -q .
+      - name: Validate database migration SQL
+        env:
+          DATABASE_URL: postgresql+psycopg2://parkmate:ci-only@localhost:5432/parkmate
+          JWT_SECRET_KEY: ci-only-not-for-deployment
+        run: alembic upgrade --sql head > /tmp/parkmate-migration.sql
       - name: Run backend contract tests
         run: python -m unittest discover -s tests -v
 
@@ -86,3 +93,20 @@ jobs:
         run: docker build -t parkmate-celery ./ml
       - name: Build Redis image
         run: docker build -t parkmate-redis ./devops/redis
+      - name: Smoke-test a clean Compose stack
+        run: |
+          python devops/scripts/parkmate_ops.py init-env
+          trap 'docker compose down -v; rm -f .env' EXIT
+          docker compose up --build -d --wait --wait-timeout 240
+          email="ci-smoke-${GITHUB_RUN_ID}@example.com"
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            --data "{\"name\":\"CI Smoke\",\"email\":\"${email}\",\"phone_no\":\"9991234567\",\"password\":\"SmokeOnly-123!\",\"city\":\"Jaipur\",\"state\":\"Rajasthan\",\"country\":\"IN\",\"location_permission_granted\":true,\"latitude\":26.9124,\"longitude\":75.7873}" \
+            http://localhost/auth/registration
+          curl --fail --silent --show-error \
+            -H 'Content-Type: application/json' \
+            --data "{\"email\":\"${email}\",\"password\":\"SmokeOnly-123!\"}" \
+            http://localhost/auth/userlogin |
+            python -c 'import json,sys; result=json.load(sys.stdin); assert result.get("access_token") and result.get("refresh_token")'
+          curl --fail --silent --show-error http://localhost/ready |
+            python -c 'import json,sys; result=json.load(sys.stdin); assert result["status"] == "ready" and result["database_connected"] and result["redis_connected"]'

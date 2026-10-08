@@ -1,7 +1,10 @@
-.PHONY: up down logs build config ps validate health wait status backup-db lint test ci
+.PHONY: init-env up down logs build config ps validate health wait status backup-db lint test ci
 
 PYTHON ?= python3
 OPS := $(PYTHON) devops/scripts/parkmate_ops.py
+
+init-env:
+	$(OPS) init-env
 
 up:
 	docker compose up --build -d

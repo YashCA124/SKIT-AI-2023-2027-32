@@ -2,9 +2,8 @@ from core.db import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DateTime, Enum as SQLEnum
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from booking_status import BookingStatus
+from .booking_status import BookingStatus
 from zoneinfo import ZoneInfo
-from currency import currency
 
 def enum_values(enum_cls):
     return [e.value for e in enum_cls]
@@ -56,8 +55,7 @@ class ParkingBooking(Base):
 
     @property
     def get_lot_currency(self):
-        lot_country = self.spot.floor.parking_lot.country
-        return currency.get(lot_country, "CURRENCY_NOT_AVAILABLE")
+        return "CURRENCY_NOT_AVAILABLE"
     
     @property
     def get_total_hour(self):
