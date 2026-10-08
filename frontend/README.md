@@ -2,15 +2,15 @@
 
 This directory contains the web client for Parkwise, a parking application.
 The interface is built with **React 19** and **Vite**. It includes connected
-user registration/sign-in plus a backend-independent presentation demo for
-Driver, Merchant, and Administrator dashboards. Demo actions and sample data
-are local to the browser and are never sent to the backend.
+user registration/sign-in plus a backend-independent walkthrough for Driver,
+Merchant, and Administrator screens. Walkthrough actions and sample data are
+local to the browser and are never sent to the backend.
 
 ## Table of contents
 
 - [Frontend at a glance](#frontend-at-a-glance)
 - [Screens and user journeys](#screens-and-user-journeys)
-- [Offline role dashboard demo](#offline-role-dashboard-demo)
+- [Offline walkthrough](#offline-walkthrough)
 - [How the frontend is organized](#how-the-frontend-is-organized)
 - [Backend API integration](#backend-api-integration)
 - [Session and error handling](#session-and-error-handling)
@@ -97,22 +97,28 @@ The current page shows:
 - A sign-out action.
 
 The live account page does not invent parking availability, parking lots, or
-bookings. The presentation dashboard is a separate, explicitly labeled demo
+bookings. The offline walkthrough is separate from the live account and is
 described below.
 
-### Offline role dashboard demo
+### Offline walkthrough
 
-The sign-in/registration screen includes **Explore the dashboards**. Select
-Driver, Merchant, or Administrator to open that role's dashboard immediately.
-No API server, account, or network connection is needed for this preview.
+The sign-in/registration screen includes **Explore role screens**. Select
+Driver, Merchant, or Administrator to inspect that role's screens without an
+API server. To test the auth page flow too, select **Use offline walkthrough**
+in the sign-in card and use the sample credentials shown there, or register a
+temporary in-memory sample account.
 
-The demo includes sample overview metrics, searchable sample parking locations
-and users, sample bookings, and local-only interactions such as booking a
-sample spot, changing a displayed rate, toggling a location status, or
-suspending a sample user. Changes last only while the dashboard is open.
-Sample data and illustrative figures are labeled as demo content and do not
-describe live inventory, users, revenue, or activity. Use **Switch dashboard**
-to change roles or **Exit demo** to return to sign-in.
+The walkthrough includes Driver overview, parking search, bookings, payments,
+Merchant overview, locations and rates, and Administrator overview, users,
+and parking lots. Local-only interactions include creating a sample booking,
+updating a sample rate, and changing sample user/location statuses. Edits are
+held only in page memory.
+
+This mode does not make API/database/payment-provider requests. All shown
+users, locations, bookings, payment methods, transactions, and metrics are
+fictional examples. Sample payment screens do not charge money. Use the
+walkthrough to inspect frontend behavior; use **Use live API** to return to
+real account authentication.
 
 ### Service status
 
@@ -144,7 +150,7 @@ The app keeps the main screens in one file:
 - **`Brand`** renders the Parkwise header brand.
 - **`Alert`** renders accessible error/status messages.
 - **`AuthScreen`** renders sign-in, registration, and the role preview picker.
-- **`DemoDashboard`** renders the role-specific demo workspace and local
+- **`DemoDashboard`** renders the role-specific offline walkthrough and local
   sample state.
 - **`UserDashboard`**, **`MerchantDashboard`**, and **`AdminDashboard`**
   render their respective dashboard views.
@@ -328,7 +334,7 @@ the auth and dashboard columns.
 
 ## Current scope and limitations
 
-- The offline role dashboards are presentation demos, not production
+- The offline role screens are frontend walkthroughs, not production
   management tools; their metrics and records are illustrative sample data.
 - Sign-in and registration still require the FastAPI backend.
 - There is no Google sign-in or other third-party identity flow.
@@ -352,8 +358,8 @@ Run these commands from `frontend/`:
 ## Explaining the frontend in a presentation
 
 > The Parkwise frontend is built with React and Vite. People can explore
-> Driver, Merchant, and Administrator dashboard designs in an interactive,
-> backend-independent presentation mode. The demo uses clearly labeled sample
-> records and local-only interactions. Registration and real sign-in are
-> connected to FastAPI; the live signed-in page shows returned account details
-> without pretending sample parking data is live.
+> Driver, Merchant, and Administrator frontend screens in an offline
+> walkthrough that also lets us inspect the registration and sign-in layouts
+> without a running server. The walkthrough uses clearly identified sample
+> records and local-only interactions. Actual account registration and sign-in
+> use FastAPI; the live account page shows only details returned by that API.

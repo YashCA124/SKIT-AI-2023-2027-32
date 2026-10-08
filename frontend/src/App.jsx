@@ -16,6 +16,7 @@ const NAVIGATION = {
     { id: 'overview', label: 'Overview', icon: '◫' },
     { id: 'parking', label: 'Find parking', icon: '⌖' },
     { id: 'bookings', label: 'My bookings', icon: '▤' },
+    { id: 'payments', label: 'Payments', icon: '₹' },
   ],
   merchant: [
     { id: 'overview', label: 'Overview', icon: '◫' },
@@ -39,6 +40,12 @@ const DEMO_LOTS = [
 const DEMO_BOOKINGS = [
   { id: 'PK-2048', lot: 'Central Plaza Parking', spot: 'B-14', date: 'Today, 10:30 AM', until: 'Today, 1:30 PM', amount: 120, status: 'Active' },
   { id: 'PK-1982', lot: 'Pink City Hub', spot: 'A-07', date: 'Yesterday, 4:00 PM', until: 'Yesterday, 6:00 PM', amount: 60, status: 'Completed' },
+]
+
+const DEMO_PAYMENTS = [
+  { id: 'TX-8871', date: '08 Oct 2026', description: 'Central Plaza Parking', method: 'Visa •••• 4242', amount: 120, status: 'Paid' },
+  { id: 'TX-8814', date: '07 Oct 2026', description: 'Pink City Hub', method: 'UPI • aarav@upi', amount: 60, status: 'Paid' },
+  { id: 'TX-8720', date: '05 Oct 2026', description: 'C-Scheme Secure Park', method: 'Visa •••• 4242', amount: 100, status: 'Refunded' },
 ]
 
 const DEMO_USERS = [
@@ -128,8 +135,8 @@ function DemoRolePicker({ onPreview }) {
     <section className="preview-card" aria-labelledby="preview-title">
       <div className="preview-card__heading">
         <div>
-          <p className="eyebrow">Presentation mode</p>
-          <h2 id="preview-title">Explore the dashboards</h2>
+          <p className="eyebrow">Offline walkthrough</p>
+          <h2 id="preview-title">Explore role screens</h2>
         </div>
         <span className="demo-pill">Demo data</span>
       </div>
@@ -138,7 +145,7 @@ function DemoRolePicker({ onPreview }) {
         {Object.entries(ROLES).map(([role, details]) => (
           <button className="role-choice" key={role} type="button" onClick={() => onPreview(role)}>
             <span className={`role-choice__icon role-choice__icon--${role}`}>{details.initials}</span>
-            <span className="role-choice__text"><strong>{details.label}</strong><small>Preview dashboard</small></span>
+            <span className="role-choice__text"><strong>{details.label}</strong><small>Open screens</small></span>
             <span className="role-choice__arrow" aria-hidden="true">→</span>
           </button>
         ))}
@@ -154,6 +161,8 @@ function AuthScreen({ onPreview, onLogin }) {
   const [notice, setNotice] = useState('')
   const [noticeKind, setNoticeKind] = useState('error')
   const [shareLocation, setShareLocation] = useState(false)
+  const [offlineMode, setOfflineMode] = useState(false)
+  const [offlineAccount, setOfflineAccount] = useState(null)
 
   async function handleLogin(event) {
     event.preventDefault()
@@ -161,6 +170,24 @@ function AuthScreen({ onPreview, onLogin }) {
     setPending(true)
     setNotice('')
     setNoticeKind('error')
+    if (offlineMode) {
+      const email = form.get('email').trim().toLowerCase()
+      const password = form.get('password')
+      const sampleAccount = { id: 'SAMPLE-DRIVER-01', name: 'Aarav Sharma', email, role: 'Driver' }
+      const account = email === 'driver@parkwise.demo' && password === 'parkwise'
+        ? sampleAccount
+        : offlineAccount?.email.toLowerCase() === email && offlineAccount.password === password
+          ? offlineAccount.user
+          : null
+      if (!account) {
+        setNotice('Use the sample credentials shown below, or register an offline walkthrough account first.')
+        setPending(false)
+        return
+      }
+      setPending(false)
+      onLogin({ offlineDemo: true, user: account })
+      return
+    }
     try {
       const result = await apiRequest('/auth/userlogin', {
         method: 'POST',
@@ -204,6 +231,20 @@ function AuthScreen({ onPreview, onLogin }) {
     setPending(true)
     setNotice('')
     setNoticeKind('error')
+    if (offlineMode) {
+      const user = {
+        id: `SAMPLE-${Date.now()}`,
+        name: payload.name,
+        email: payload.email,
+        role: 'Driver',
+      }
+      setOfflineAccount({ email: payload.email.toLowerCase(), password: payload.password, user })
+      setView('login')
+      setNoticeKind('success')
+      setNotice('Offline walkthrough account created in memory. It was not sent to a server and will be cleared when you leave this page.')
+      setPending(false)
+      return
+    }
     try {
       if (shareLocation) Object.assign(payload, await getBrowserLocation())
       const result = await apiRequest('/auth/registration', {
@@ -236,6 +277,13 @@ function AuthScreen({ onPreview, onLogin }) {
 
       <section className="auth-card" aria-labelledby="auth-title">
         <div className="auth-card__top"><Brand /><span className="secure-label">PARKWISE ACCOUNT</span></div>
+        <div className={`connection-mode${offlineMode ? ' connection-mode--offline' : ''}`}>
+          <span><i />{offlineMode ? 'OFFLINE WALKTHROUGH' : 'LIVE API'}</span>
+          <button className="text-button" type="button" onClick={() => { setOfflineMode((mode) => !mode); setNotice('') }}>
+            Use {offlineMode ? 'live API' : 'offline walkthrough'}
+          </button>
+        </div>
+        {offlineMode && <div className="offline-credentials" role="note"><strong>Sample sign-in</strong><span>Email: driver@parkwise.demo</span><span>Password: parkwise</span><small>Authentication and registration are simulated locally. No request is sent and no account is created on the server.</small></div>}
         <p className="eyebrow">{view === 'login' ? 'Welcome back' : 'Join Parkwise'}</p>
         <h2 id="auth-title">{view === 'login' ? 'Sign in to your account' : 'Create your account'}</h2>
         <p className="form-intro">{view === 'login' ? 'Enter your details to continue.' : 'Your parking journey starts here.'}</p>
@@ -254,11 +302,13 @@ function AuthScreen({ onPreview, onLogin }) {
               <label>City<input name="city" autoComplete="address-level2" required placeholder="Jaipur" /></label>
               <label>State<input name="state" autoComplete="address-level1" required placeholder="Rajasthan" /></label>
               <label className="form-field--wide">Country code<input name="country" autoComplete="country" required minLength={2} maxLength={2} pattern="[A-Za-z]{2}" placeholder="IN" /></label>
-              <label className="checkbox-field form-field--wide">
-                <input type="checkbox" checked={shareLocation} onChange={(event) => setShareLocation(event.target.checked)} />
-                <span>Allow Parkwise to use my current location</span>
-              </label>
-              <p className="field-hint form-field--wide">Optional. Otherwise, your city and state are used to estimate your location.</p>
+              {!offlineMode && <>
+                <label className="checkbox-field form-field--wide">
+                  <input type="checkbox" checked={shareLocation} onChange={(event) => setShareLocation(event.target.checked)} />
+                  <span>Allow Parkwise to use my current location</span>
+                </label>
+                <p className="field-hint form-field--wide">Optional. Otherwise, your city and state are used to estimate your location.</p>
+              </>}
             </div>
           )}
           <button className="primary-button" type="submit" disabled={pending}>
@@ -271,8 +321,8 @@ function AuthScreen({ onPreview, onLogin }) {
             {view === 'login' ? 'Create an account' : 'Sign in'}
           </button>
         </p>
-        <div className="auth-divider"><span>PREVIEW WITHOUT SIGN-IN</span></div>
-        <button className="demo-link" type="button" onClick={() => onPreview('user')}>Open dashboard demo <span aria-hidden="true">→</span></button>
+        <div className="auth-divider"><span>OPEN ROLE SCREENS</span></div>
+        <button className="demo-link" type="button" onClick={() => onPreview('user')}>Continue to Driver screens <span aria-hidden="true">→</span></button>
       </section>
     </main>
   )
@@ -318,14 +368,22 @@ function ParkingCard({ lot, onBook }) {
   )
 }
 
-function UserDashboard({ page, onNavigate, lots, setLots, bookings, setBookings, notice, setNotice }) {
+function UserDashboard({ page, onNavigate, lots, setLots, bookings, setBookings, payments, setPayments, notice, setNotice }) {
   const [query, setQuery] = useState('')
   const visibleLots = lots.filter((lot) => `${lot.name} ${lot.address}`.toLowerCase().includes(query.toLowerCase()))
   const bookLot = (lot) => {
     const booking = { id: `DEMO-${Date.now().toString().slice(-4)}`, lot: lot.name, spot: 'C-12', date: 'Today, 2:00 PM', until: 'Today, 4:00 PM', amount: lot.rate * 2, status: 'Active' }
     setBookings((items) => [booking, ...items])
+    setPayments((items) => [{
+      id: `TX-${Date.now().toString().slice(-4)}`,
+      date: '08 Oct 2026',
+      description: lot.name,
+      method: 'Visa •••• 4242',
+      amount: booking.amount,
+      status: 'Sample paid',
+    }, ...items])
     setLots((items) => items.map((item) => item.id === lot.id ? { ...item, available: Math.max(0, item.available - 1), status: item.available === 1 ? 'Full' : item.status } : item))
-    setNotice(`Demo booking confirmed at ${lot.name}.`)
+    setNotice(`Sample booking created at ${lot.name}; no real payment was made.`)
   }
   const cancelBooking = (bookingId) => {
     const booking = bookings.find((item) => item.id === bookingId)
@@ -344,6 +402,26 @@ function UserDashboard({ page, onNavigate, lots, setLots, bookings, setBookings,
 
   if (page === 'bookings') {
     return <><SectionHeading eyebrow="Your activity" title="My bookings" description="Your sample parking activity for the demo." /><div className="table-card"><div className="table-scroll"><table><thead><tr><th>BOOKING</th><th>PARKING LOCATION</th><th>WHEN</th><th>AMOUNT</th><th>STATUS</th><th /></tr></thead><tbody>{bookings.map((booking) => <tr key={booking.id}><td><strong>{booking.id}</strong><small>Spot {booking.spot}</small></td><td>{booking.lot}</td><td>{booking.date}<small>Until {booking.until}</small></td><td>₹{booking.amount}</td><td><StatusBadge>{booking.status}</StatusBadge></td><td>{booking.status === 'Active' && <button className="table-action" onClick={() => cancelBooking(booking.id)} type="button">Cancel</button>}</td></tr>)}</tbody></table></div>{bookings.length === 0 && <EmptyState title="No bookings yet" text="Find a parking spot to create a demo booking." />}</div></>
+  }
+
+  if (page === 'payments') {
+    return (
+      <>
+        <SectionHeading eyebrow="Billing" title="Payments" description="Sample transaction history for checking the payment screen layout." />
+        <div className="demo-banner"><span>ⓘ</span><p><strong>Offline payment screen</strong> — these transactions and payment methods are fictional examples. No payment provider is connected and no money can be charged.</p></div>
+        <section className="panel payment-methods">
+          <SectionHeading eyebrow="For display only" title="Saved payment methods" />
+          <div className="payment-method-list">
+            <div><span className="payment-method-icon">VISA</span><span><strong>Visa ending in 4242</strong><small>Sample card · expires 08/28</small></span><span className="status-badge">Example</span></div>
+            <div><span className="payment-method-icon payment-method-icon--upi">UPI</span><span><strong>aarav@upi</strong><small>Sample UPI address</small></span><span className="status-badge">Example</span></div>
+          </div>
+        </section>
+        <section className="panel payment-history">
+          <SectionHeading eyebrow="Activity" title="Transaction history" />
+          <div className="table-card"><div className="table-scroll"><table><thead><tr><th>TRANSACTION</th><th>DATE</th><th>DESCRIPTION</th><th>METHOD</th><th>AMOUNT</th><th>STATUS</th></tr></thead><tbody>{payments.map((payment) => <tr key={payment.id}><td><strong>{payment.id}</strong></td><td>{payment.date}</td><td>{payment.description}</td><td>{payment.method}</td><td>₹{payment.amount}</td><td><StatusBadge>{payment.status}</StatusBadge></td></tr>)}</tbody></table></div>{payments.length === 0 && <EmptyState title="No sample transactions" text="A sample transaction will appear after you make a walkthrough booking." />}</div>
+        </section>
+      </>
+    )
   }
 
   return (
@@ -365,7 +443,7 @@ function UserDashboard({ page, onNavigate, lots, setLots, bookings, setBookings,
           {bookings.find((booking) => booking.status === 'Active') ? <div className="next-booking"><span className="booking-date"><b>08</b><small>OCT</small></span><div><strong>{bookings.find((booking) => booking.status === 'Active').lot}</strong><small>{bookings.find((booking) => booking.status === 'Active').date}</small><small>Spot {bookings.find((booking) => booking.status === 'Active').spot}</small></div><StatusBadge>Active</StatusBadge></div> : <EmptyState title="Nothing booked yet" text="Your next reservation will show here." />}
         </section>
       </div>
-      <p className="demo-footnote">All figures and locations on this preview are illustrative sample data, not live parking inventory.</p>
+      <p className="demo-footnote">All figures and locations are illustrative sample data, not live parking inventory.</p>
       <Alert kind="success">{notice}</Alert>
     </>
   )
@@ -403,7 +481,7 @@ function MerchantDashboard({ page, lots, setLots, notice, setNotice }) {
       </div>}
       {(page === 'locations' || page === 'spaces') && <div className="table-card"><div className="table-scroll"><table><thead><tr><th>LOCATION</th><th>SPACES</th><th>AVAILABILITY</th><th>HOURLY RATE</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>{merchantLots.map((lot) => <tr key={lot.id}><td><strong>{lot.name}</strong><small>{lot.address}</small></td><td>{lot.total}</td><td><div className="availability-cell"><span>{lot.available} available</span><span className="availability-track"><i style={{ width: `${Math.max(4, lot.available / lot.total * 100)}%` }} /></span></div></td><td>{page === 'spaces' ? <label className="rate-input">₹<input type="number" min="0" value={lot.rate} onChange={(event) => adjustRate(lot.id, event.target.value)} aria-label={`Hourly rate for ${lot.name}`} />/hr</label> : `₹${lot.rate}/hr`}</td><td><StatusBadge>{lot.status}</StatusBadge></td><td><button className="table-action" onClick={() => toggleLot(lot.id)} type="button">{lot.status === 'Open' ? 'Close' : 'Open'}</button></td></tr>)}</tbody></table></div>{merchantLots.length === 0 && <EmptyState title="No sample locations" text="Add a location to preview merchant controls." />}</div>}
       <Alert kind="success">{notice}</Alert>
-      <p className="demo-footnote">Revenue, ratings, occupancy, and inventory are sample figures for the presentation preview.</p>
+      <p className="demo-footnote">Revenue, ratings, occupancy, and inventory are sample figures for this offline walkthrough.</p>
     </>
   )
 }
@@ -433,7 +511,7 @@ function AdminDashboard({ page, onNavigate, lots, setLots, users, setUsers, noti
         </div>
         <div className="content-columns">
           <section className="panel"><SectionHeading eyebrow="Recently joined" title="New users" action={<button className="inline-link" onClick={() => onNavigate('users')} type="button">View users →</button>} /><div className="compact-lot-list">{users.slice(0, 4).map((user) => <div className="compact-lot" key={user.id}><span className={`avatar avatar--${user.role === 'Merchant' ? 'merchant' : 'user'}`}>{user.name.split(' ').map((part) => part[0]).join('')}</span><div className="compact-lot__main"><strong>{user.name}</strong><small>{user.role} · joined {user.joined}</small></div><StatusBadge>{user.status}</StatusBadge></div>)}</div></section>
-          <section className="panel"><SectionHeading eyebrow="Platform health" title="Operations snapshot" /><div className="operation-list"><div><span className="operation-dot operation-dot--green" />API demo environment <strong>Preview mode</strong></div><div><span className="operation-dot operation-dot--blue" />Sample locations <strong>{lots.length}</strong></div><div><span className="operation-dot operation-dot--orange" />Pending reviews <strong>3</strong></div></div></section>
+          <section className="panel"><SectionHeading eyebrow="Platform health" title="Operations snapshot" /><div className="operation-list"><div><span className="operation-dot operation-dot--orange" />API connection <strong>Offline</strong></div><div><span className="operation-dot operation-dot--blue" />Sample locations <strong>{lots.length}</strong></div><div><span className="operation-dot operation-dot--orange" />Sample pending reviews <strong>3</strong></div></div></section>
         </div>
       </>}
       {page === 'users' && <div className="table-card"><div className="table-scroll"><table><thead><tr><th>USER</th><th>ROLE</th><th>JOINED</th><th>STATUS</th><th>ACTION</th></tr></thead><tbody>{filteredUsers.map((user) => <tr key={user.id}><td><strong>{user.name}</strong><small>{user.id} · {user.email}</small></td><td><span className="role-tag">{user.role}</span></td><td>{user.joined}</td><td><StatusBadge>{user.status}</StatusBadge></td><td><button className="table-action" onClick={() => toggleUser(user.id)} type="button">{user.status === 'Active' ? 'Suspend' : 'Restore'}</button></td></tr>)}</tbody></table></div>{filteredUsers.length === 0 && <EmptyState title="No users match" text="Try a different search." />}</div>}
@@ -448,6 +526,7 @@ function DemoDashboard({ role, onRoleChange, onExit, theme, onThemeToggle }) {
   const [page, setPage] = useState('overview')
   const [lots, setLots] = useState(() => DEMO_LOTS.map((lot) => ({ ...lot })))
   const [bookings, setBookings] = useState(() => DEMO_BOOKINGS.map((booking) => ({ ...booking })))
+  const [payments, setPayments] = useState(() => DEMO_PAYMENTS.map((payment) => ({ ...payment })))
   const [users, setUsers] = useState(() => DEMO_USERS.map((user) => ({ ...user })))
   const [notice, setNotice] = useState('')
   const roleDetails = ROLES[role]
@@ -457,35 +536,36 @@ function DemoDashboard({ role, onRoleChange, onExit, theme, onThemeToggle }) {
     <div className="workspace">
       <aside className="sidebar">
         <div className="sidebar-brand"><Brand /><span className="sidebar-collapse" aria-hidden="true">‹</span></div>
-        <div className="workspace-switch"><span className={`workspace-avatar workspace-avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.label} workspace</strong><small>Parkwise demo</small></span><span className="switch-chevron">⌄</span></div>
+        <div className="workspace-switch"><span className={`workspace-avatar workspace-avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.label} workspace</strong><small>Offline walkthrough</small></span><span className="switch-chevron">⌄</span></div>
         <p className="nav-label">WORKSPACE</p>
         <nav className="side-nav" aria-label={`${roleDetails.label} dashboard`}>
           {NAVIGATION[role].map((item) => <button className={`nav-item${activePage === item.id ? ' nav-item--active' : ''}`} key={item.id} onClick={() => { setPage(item.id); setNotice('') }} type="button"><span className="nav-item__icon" aria-hidden="true">{item.icon}</span>{item.label}{item.id === 'bookings' && <span className="nav-counter">{bookings.filter((booking) => booking.status === 'Active').length}</span>}</button>)}
         </nav>
-        <div className="sidebar-bottom"><div className="demo-side-note"><span>✦</span><strong>Presentation preview</strong><p>Changes are temporary and won't affect real accounts.</p></div><button className="switch-role-button" onClick={onRoleChange} type="button">⇄ Switch dashboard</button></div>
+        <div className="sidebar-bottom"><div className="demo-side-note"><span>✦</span><strong>Frontend walkthrough</strong><p>Sample content only. Changes stay in this browser session.</p></div><button className="switch-role-button" onClick={onRoleChange} type="button">⇄ Switch role</button></div>
       </aside>
       <div className="workspace-main">
         <header className="workspace-topbar">
           <div className="breadcrumbs"><span>Parkwise</span><b>/</b><strong>{roleDetails.title}</strong></div>
-          <div className="topbar-actions"><span className="demo-pill demo-pill--top">DEMO · SAMPLE DATA</span><ThemeToggle theme={theme} onToggle={onThemeToggle} /><span className="topbar-divider" /><div className="profile-menu"><span className={`avatar avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.name}</strong><small>{roleDetails.label}</small></span><button className="profile-menu__exit" onClick={onExit} type="button">Exit demo</button></div></div>
+          <div className="topbar-actions"><span className="demo-pill demo-pill--top">OFFLINE WALKTHROUGH · SAMPLE DATA</span><ThemeToggle theme={theme} onToggle={onThemeToggle} /><span className="topbar-divider" /><div className="profile-menu"><span className={`avatar avatar--${role}`}>{roleDetails.initials}</span><span><strong>{roleDetails.name}</strong><small>{roleDetails.label}</small></span><button className="profile-menu__exit" onClick={onExit} type="button">Exit walkthrough</button></div></div>
         </header>
         <main className="workspace-content">
-          <div className="demo-banner"><span>ⓘ</span><p><strong>Interactive demo mode</strong> — sample data only. Any changes you make are temporary and stay in this browser session.</p></div>
-          {role === 'user' && <UserDashboard page={activePage} onNavigate={setPage} lots={lots} setLots={setLots} bookings={bookings} setBookings={setBookings} notice={notice} setNotice={setNotice} />}
+          <div className="demo-banner"><span>ⓘ</span><p><strong>Frontend walkthrough</strong> — fictional sample data; this screen is not connected to live accounts, parking inventory, or payment services. Changes stay in this browser session.</p></div>
+          {role === 'user' && <UserDashboard page={activePage} onNavigate={setPage} lots={lots} setLots={setLots} bookings={bookings} setBookings={setBookings} payments={payments} setPayments={setPayments} notice={notice} setNotice={setNotice} />}
           {role === 'merchant' && <MerchantDashboard page={activePage} lots={lots} setLots={setLots} notice={notice} setNotice={setNotice} />}
           {role === 'admin' && <AdminDashboard page={activePage} onNavigate={setPage} lots={lots} setLots={setLots} users={users} setUsers={setUsers} notice={notice} setNotice={setNotice} />}
         </main>
-        <footer className="workspace-footer">PARKWISE · INTERACTIVE DEMO · NOT CONNECTED TO LIVE INVENTORY</footer>
+        <footer className="workspace-footer">PARKWISE · OFFLINE FRONTEND WALKTHROUGH · SAMPLE DATA ONLY</footer>
       </div>
     </div>
   )
 }
 
-function ServiceStatus() {
+function ServiceStatus({ offline = false }) {
   const [checkVersion, setCheckVersion] = useState(0)
   const [status, setStatus] = useState({ health: 'checking', readiness: 'checking', details: null, lastChecked: null, error: '' })
 
   useEffect(() => {
+    if (offline) return undefined
     const controller = new AbortController()
     async function checkServices() {
       const [health, readiness] = await Promise.allSettled([
@@ -506,7 +586,16 @@ function ServiceStatus() {
     }
     checkServices()
     return () => controller.abort()
-  }, [checkVersion])
+  }, [checkVersion, offline])
+
+  if (offline) {
+    return (
+      <section className="service-panel" aria-labelledby="service-title">
+        <div className="service-panel__heading"><div><p className="eyebrow">Connection</p><h2 id="service-title">Service status</h2></div></div>
+        <div className="service-state"><span className="service-state__dot" /><span><strong>Offline walkthrough</strong><small>No API or database requests are made in this mode.</small></span></div>
+      </section>
+    )
+  }
 
   return (
     <section className="service-panel" aria-labelledby="service-title">
@@ -533,16 +622,17 @@ function ServiceStatus() {
 }
 
 function RealAccount({ session, onLogout, onDemo, notice, pending }) {
+  const offline = Boolean(session.offlineDemo)
   return (
     <main className="real-account">
-      <div className="real-account__head"><span className="demo-pill">LIVE ACCOUNT</span><button className="secondary-button" onClick={onLogout} disabled={pending} type="button">{pending ? 'Signing out…' : 'Sign out'}</button></div>
+      <div className="real-account__head"><span className="demo-pill">{offline ? 'OFFLINE SAMPLE ACCOUNT' : 'LIVE ACCOUNT'}</span><button className="secondary-button" onClick={onLogout} disabled={pending} type="button">{pending ? 'Signing out…' : 'Sign out'}</button></div>
       <Alert>{notice}</Alert>
       <p className="eyebrow">Your account</p><h1>Welcome, {session.user.name}</h1>
-      <p className="section-description">Signed in using the connected Parkwise API.</p>
+      <p className="section-description">{offline ? 'Signed in locally for the offline walkthrough. No account was created on the server.' : 'Signed in using the connected Parkwise API.'}</p>
       <section className="real-account__card"><h2>Account details</h2><dl><div><dt>Name</dt><dd>{session.user.name}</dd></div><div><dt>Account ID</dt><dd>{session.user.id}</dd></div><div><dt>Account type</dt><dd>{session.user.role}</dd></div></dl></section>
-      <ServiceStatus />
-      <p className="demo-footnote">The live backend currently does not provide all parking dashboard data.</p>
-      <button className="demo-link" onClick={onDemo} type="button">Preview the full user dashboard design →</button>
+      <ServiceStatus offline={offline} />
+      <p className="demo-footnote">{offline ? 'Offline walkthrough account only. Use the role screens to inspect sample user, merchant, admin, and payment interfaces.' : 'The live backend currently does not provide all parking dashboard data.'}</p>
+      <button className="demo-link" onClick={onDemo} type="button">{offline ? 'Open Driver screens' : 'Open Driver screen walkthrough'} →</button>
     </main>
   )
 }
@@ -587,7 +677,7 @@ function App() {
   }, [theme])
 
   useEffect(() => {
-    if (!realSession) return undefined
+    if (!realSession || realSession.offlineDemo) return undefined
     let cancelled = false
 
     async function verifySession() {
@@ -644,7 +734,7 @@ function App() {
   async function logout() {
     setLogoutPending(true)
     setLogoutNotice('')
-    if (realSession) {
+    if (realSession && !realSession.offlineDemo) {
       const results = await Promise.allSettled([
         apiRequest('/auth/logoutcurrent', { method: 'POST', headers: { Authorization: `Bearer ${realSession.accessToken}` } }),
         apiRequest('/auth/logoutrefresh', { method: 'POST', headers: { Authorization: `Bearer ${realSession.refreshToken}` } }),
