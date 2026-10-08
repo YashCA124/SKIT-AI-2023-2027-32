@@ -1,0 +1,16 @@
+.form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.form-grid label { display: grid; gap: 7px; color: #4c586a; font-size: .78rem; font-weight: 700; }
+.form-grid input { width: 100%; height: 44px; border: 1px solid #dfe5ed; border-radius: 9px; padding: 0 12px; background: #fff; color: #233149; font-size: .86rem; }
+.form-grid input::placeholder { color: #aab3c0; }
+.form-grid .form-field--wide { grid-column: 1 / -1; }
+.checkbox-field { display: flex !important; align-items: flex-start; gap: 9px !important; color: #637084 !important; font-size: .76rem !important; font-weight: 500 !important; line-height: 1.5; }
+.checkbox-field input { width: 17px; height: 17px; flex: 0 0 17px; margin: 1px 0 0; accent-color: #4264e8; }
+.field-hint { margin: -3px 0 0; color: #8994a4; font-size: .72rem; line-height: 1.5; }
+
+:root[data-theme='dark'] .form-grid label { color: #c3ccda; }
+:root[data-theme='dark'] .form-grid input { border-color: #3a4658; background: #141c28; color: #e5eaf3; }
+
+@media (max-width: 480px) {
+  .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .form-grid .form-field--wide { grid-column: auto; }
+}

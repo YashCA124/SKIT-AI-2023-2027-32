@@ -1,16 +1,16 @@
 # Parkwise frontend
 
 This directory contains the web client for Parkwise, a parking application.
-The interface is built with **React 19** and **Vite**. It includes connected
-user registration/sign-in plus a backend-independent walkthrough for Driver,
-Merchant, and Administrator screens. Walkthrough actions and sample data are
-local to the browser and are never sent to the backend.
+The interface is built with **React 19** and **Vite**. It includes API-backed
+user registration/sign-in, administrator sign-in, session handling, a live
+account page, and feature availability screens. It does not generate sample
+accounts, parking records, bookings, payments, or administrative actions.
 
 ## Table of contents
 
 - [Frontend at a glance](#frontend-at-a-glance)
 - [Screens and user journeys](#screens-and-user-journeys)
-- [Offline walkthrough](#offline-walkthrough)
+- [Feature availability](#feature-availability)
 - [How the frontend is organized](#how-the-frontend-is-organized)
 - [Backend API integration](#backend-api-integration)
 - [Session and error handling](#session-and-error-handling)
@@ -29,7 +29,7 @@ local to the browser and are never sent to the backend.
 | Build tool and dev server | Vite |
 | Language | JavaScript with JSX |
 | Styling | Handwritten CSS; no component or CSS framework |
-| Routing | One React application with sign-in, registration, live account, and role dashboard views; no client-side router |
+| Routing | React Router routes for sign-in, registration, account, and role pages |
 | API communication | Browser `fetch` calls to FastAPI |
 | Client-side session storage | `sessionStorage` for access token, refresh token, and the small account object returned at sign-in |
 | Main entry point | `src/main.jsx` |
@@ -39,16 +39,17 @@ The app does not currently use a global state library, form library, or
 third-party UI package. React state and browser APIs are used directly.
 
 The interface includes a light/dark theme control on the sign-in, live account,
-and role dashboard screens. The selected theme is saved in browser
+and role screens. The selected theme is saved in browser
 `localStorage` and restored on the next visit.
 
 ## Screens and user journeys
 
 ### Sign-in
 
-The initial screen contains an email and password form. The browser performs
-basic required-field and email-format checks, then sends the credentials to
-`POST /auth/userlogin`.
+The sign-in page defaults to an email and password form. The account-type
+control also provides administrator username/password sign-in. The browser
+performs basic required-field and email-format checks, then sends credentials
+to `POST /auth/userlogin` or `POST /auth/adminlogin`.
 
 When the API succeeds, the frontend:
 
@@ -96,29 +97,23 @@ The current page shows:
 - Service health and readiness.
 - A sign-out action.
 
-The live account page does not invent parking availability, parking lots, or
-bookings. The offline walkthrough is separate from the live account and is
-described below.
+The signed-in account page displays only account fields returned by the
+authentication API. It does not invent parking availability, parking lots, or
+bookings.
 
-### Offline walkthrough
+### Feature availability
 
-The sign-in/registration screen includes **Explore role screens**. Select
-Driver, Merchant, or Administrator to inspect that role's screens without an
-API server. To test the auth page flow too, select **Use offline walkthrough**
-in the sign-in card and use the sample credentials shown there, or register a
-temporary in-memory sample account.
+After successful API sign-in, role navigation can display explanatory
+unavailable states instead of sample records when the active API does not
+provide the corresponding routes. There is no offline sign-in or fake user
+record mode.
 
-The walkthrough includes Driver overview, parking search, bookings, payments,
-Merchant overview, locations and rates, and Administrator overview, users,
-and parking lots. Local-only interactions include creating a sample booking,
-updating a sample rate, and changing sample user/location statuses. Edits are
-held only in page memory.
-
-This mode does not make API/database/payment-provider requests. All shown
-users, locations, bookings, payment methods, transactions, and metrics are
-fictional examples. Sample payment screens do not charge money. Use the
-walkthrough to inspect frontend behavior; use **Use live API** to return to
-real account authentication.
+`Backend/main.py` currently mounts auth, token, health, and readiness routers.
+Dashboard source files exist, but the active application does not mount those
+routers. The current API also has no payment endpoint or configured payment
+provider. Therefore parking search, bookings, merchant management,
+administrator management, and payments cannot provide live data in the
+current configuration.
 
 ### Service status
 
@@ -143,41 +138,36 @@ the API URL/proxy is not configured for that environment.
 `src/main.jsx` creates the React root, enables React `StrictMode`, imports the
 global stylesheet, and renders `App`.
 
-### Main application (`src/App.jsx`)
+### Application and page structure
 
-The app keeps the main screens in one file:
+`src/App.jsx` composes the auth and theme providers with `routes/AppRoutes.jsx`.
+The route file maps login, registration, account overview, and each
+role-specific page to React Router URLs. `auth/ProtectedRoute.jsx` restores
+and checks the tab session before rendering protected routes and redirects
+unauthenticated visitors to sign-in.
 
-- **`Brand`** renders the Parkwise header brand.
-- **`Alert`** renders accessible error/status messages.
-- **`AuthScreen`** renders sign-in, registration, and the role preview picker.
-- **`DemoDashboard`** renders the role-specific offline walkthrough and local
-  sample state.
-- **`UserDashboard`**, **`MerchantDashboard`**, and **`AdminDashboard`**
-  render their respective dashboard views.
-- **`RealAccount`** displays account fields returned by the API.
-- **`App`** owns live session restoration and logout.
-
-There is no URL-based page router. The app switches between the login,
-registration, loading, and signed-in dashboard views with React state.
+Authentication state and its restore/refresh/logout lifecycle live in
+`auth/AuthContext.jsx`; theme persistence lives in `theme/ThemeContext.jsx`.
+`pages/Login.jsx` and `pages/Register.jsx` are separate API-backed forms.
+`components/AccountWorkspace.jsx` supplies the signed-in shell, with
+`components/AccountOverview.jsx` showing API-returned account details and
+`pages/UnavailablePage.jsx` explaining unavailable APIs. User, merchant, and
+administrator route components live under their respective `pages/` folders.
 
 ### API helpers and state
 
-At the top of `App.jsx`, `API_BASE_URL` chooses the API origin. `apiRequest`
-uses `fetch`, sets JSON headers when needed, and passes responses to
-`readResponse`. The response helper extracts FastAPI `detail` messages,
-including validation errors, and produces a visible error when the response
-is not successful or cannot be read.
+`api/client.js` chooses the API origin, sends requests, and parses errors.
+`api/auth.js` contains the existing auth/token calls. API response details,
+including FastAPI validation errors, are shown visibly; the frontend does not
+create sample records or simulate protected actions.
 
-The `App` component owns live account session state. The demo dashboards keep
-their sample records in React state only; the two modes are independent.
+### Styles
 
-### Styles (`src/App.css` and `src/index.css`)
-
-`src/index.css` applies global box sizing, page sizing, and base typography.
-`src/App.css` contains the app theme, auth and dashboard layouts, form styling,
-notices, and responsive breakpoints. It uses system fonts and requires no
-external font download. On smaller screens the sign-in layout and dashboard
-navigation adapt to one column.
+`index.css` contains global reset and theme rules. Each page or reusable
+component imports its own stylesheet next to its JSX, for example
+`pages/Login.css`, `components/AccountWorkspace.css`, and
+`components/ServiceStatus.css`. Styles use system fonts and responsive
+breakpoints without an external font download.
 
 ### Vite and project files
 
@@ -185,8 +175,13 @@ navigation adapt to one column.
 | --- | --- |
 | `index.html` | Browser document shell and React mount point |
 | `src/main.jsx` | React bootstrap and global stylesheet import |
-| `src/App.jsx` | Screens, application state, API calls, session lifecycle |
-| `src/App.css` | Component and responsive layout styles |
+| `src/App.jsx` | Auth/theme provider composition and route rendering |
+| `src/routes/AppRoutes.jsx` | Explicit login, registration, account, and role routes |
+| `src/auth/AuthContext.jsx` | Session verification, refresh, login, logout |
+| `src/api/` | API request client and existing auth endpoint calls |
+| `src/pages/` | Login, registration, and role/unavailable pages |
+| `src/components/` | Shared account, status, brand, theme, and alert components |
+| `src/config/rolePages.js` | Role labels and route metadata |
 | `src/index.css` | Global styles |
 | `vite.config.js` | React plugin and local development API proxy |
 | `package.json` | Dependencies and npm scripts |
@@ -203,6 +198,7 @@ JSON unless noted otherwise. Authenticated requests use an
 | Method and path | Used for | Frontend behavior |
 | --- | --- | --- |
 | `POST /auth/userlogin` | Sign in with email and password | Stores returned account details and tokens |
+| `POST /auth/adminlogin` | Administrator sign-in with username and password | Stores returned account details and tokens |
 | `POST /auth/registration` | Create an account | Displays success and returns to sign-in |
 | `POST /auth/logoutcurrent` | Revoke the current access token | Called during sign-out with the access token |
 | `POST /auth/logoutrefresh` | Revoke the refresh token | Called during sign-out with the refresh token |
@@ -216,8 +212,9 @@ The frontend expects the login response to contain `access_token`,
 response is expected to have a success message. The refresh response contains
 `access_token`.
 
-The login payload includes `email` and `password`. Registration sends `name`,
-`email`, `phone_no`, `password`, `city`, `state`, `country`,
+User login sends `email` and `password`; administrator login sends `username`
+and `password`. Registration sends `name`, `email`, `phone_no`, `password`,
+`city`, `state`, `country`,
 `location_permission_granted`, and—when permission is granted—`latitude` and
 `longitude`.
 
@@ -246,8 +243,7 @@ responsible for validating tokens and authorizing protected actions.
 - Node.js compatible with the versions used by this Vite project.
 - npm.
 - The FastAPI backend running at `http://localhost:8000` (the default proxy
-  target) is needed for registration, sign-in, and live service status. It is
-  not needed to preview the three role dashboards.
+  target) is needed for registration, sign-in, and live service status.
 
 ### Start the development server
 
@@ -330,18 +326,18 @@ autocomplete hints. Buttons have visible focus styles. API errors use an
 alert role, status updates use a status role, and service state changes are
 announced with a live region. The registration form describes the country-code
 format and location behavior. The layout adapts to narrow screens by stacking
-the auth and dashboard columns.
+the auth and account columns.
 
 ## Current scope and limitations
 
-- The offline role screens are frontend walkthroughs, not production
-  management tools; their metrics and records are illustrative sample data.
-- Sign-in and registration still require the FastAPI backend.
+- Sign-in, registration, session verification, logout, and service status
+  require the FastAPI backend.
+- Parking, booking, merchant/admin management, and payment views are
+  unavailable because their routes are not mounted/provided by the current
+  API. The frontend does not replace them with sample data.
 - There is no Google sign-in or other third-party identity flow.
-- Live authenticated parking search, availability, bookings, payments, and
-  merchant/admin management are not wired to API endpoints.
-- The app has no client-side router; reloading returns to the app's initial
-  view and then restores a valid tab session if one exists.
+- The frontend uses explicit React Router paths. Protected paths restore a
+  valid tab session on reload and redirect to sign-in when there is no session.
 
 ## Commands
 
@@ -357,9 +353,8 @@ Run these commands from `frontend/`:
 
 ## Explaining the frontend in a presentation
 
-> The Parkwise frontend is built with React and Vite. People can explore
-> Driver, Merchant, and Administrator frontend screens in an offline
-> walkthrough that also lets us inspect the registration and sign-in layouts
-> without a running server. The walkthrough uses clearly identified sample
-> records and local-only interactions. Actual account registration and sign-in
-> use FastAPI; the live account page shows only details returned by that API.
+> The Parkwise frontend is built with React and Vite. It provides API-backed
+> user/admin sign-in, user registration, session handling, and a live account
+> page. The currently mounted API does not expose the role dashboard or
+> payment routes, so those features are reported as unavailable rather than
+> represented with fabricated activity.

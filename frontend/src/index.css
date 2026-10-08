@@ -1,15 +1,22 @@
-html, body, #root {
-  margin: 0;
-  min-height: 100%;
-  min-width: 100%;
-  font-family: Inter, 'Segoe UI', sans-serif;
+:root {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  color: #182230;
   background: #f5f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
-body {
-  min-height: 100vh;
-}
+* { box-sizing: border-box; }
+html, body, #root { min-width: 100%; min-height: 100%; margin: 0; }
+body { min-width: 320px; min-height: 100vh; background: #f5f7fb; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 3px solid #9bbcff; outline-offset: 2px; }
 
-* {
-  box-sizing: border-box;
+:root[data-theme='dark'] { color: #e5eaf3; background: #111722; color-scheme: dark; }
+:root[data-theme='dark'] body, :root[data-theme='dark'] #root { background: #111722; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
 }

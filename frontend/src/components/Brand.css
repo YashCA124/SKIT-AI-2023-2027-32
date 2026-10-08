@@ -1,0 +1,4 @@
+.brand { display: flex; align-items: center; gap: 10px; color: #1c2940; font-size: 1.1rem; font-weight: 800; letter-spacing: -.04em; }
+.brand-mark { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 12px; background: #315ce8; color: #fff; font-size: 1.05rem; box-shadow: 0 7px 16px #315ce82e; }
+
+:root[data-theme='dark'] .brand { color: #edf2fb; }

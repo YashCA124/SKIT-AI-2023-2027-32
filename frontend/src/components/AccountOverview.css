@@ -1,0 +1,37 @@
+.real-account__card, .module-status-card { border: 1px solid #e8ecf3; border-radius: 18px; background: #fff; box-shadow: 0 10px 34px #253a620c; }
+.section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin: 0 0 20px; }
+.section-heading .eyebrow { margin-bottom: 6px; }
+.section-heading h1, .section-heading h2 { margin: 0; color: #202e44; font-size: clamp(1.45rem, 2.5vw, 2rem); letter-spacing: -.055em; }
+.section-heading h2 { font-size: 1.35rem; }
+.section-description { margin: 7px 0 0; color: #7d899a; font-size: .79rem; line-height: 1.55; }
+.account-role-badge { border: 1px solid #d9e3ff; border-radius: 99px; padding: 7px 11px; background: #f2f5ff; color: #4c64c8; font-size: .68rem; font-weight: 750; }
+.real-account__card { padding: 22px; }
+.real-account__card h2 { margin: 0 0 15px; color: #26354c; font-size: 1rem; }
+.real-account__card dl { margin: 0; }
+.real-account__card dl div { display: flex; justify-content: space-between; gap: 20px; border-top: 1px solid #edf0f5; padding: 13px 0; font-size: .8rem; }
+.real-account__card dt { color: #8691a0; }
+.real-account__card dd { margin: 0; color: #3c4a60; font-weight: 700; text-align: right; }
+.module-status-section { margin-top: 28px; }
+.module-status-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+.module-status-card { padding: 17px; }
+.module-status-card__status { display: inline-flex; border: 1px solid #f0e2b9; border-radius: 99px; padding: 5px 8px; background: #fffaf0; color: #8a6b2b; font-size: .59rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.module-status-card h3 { margin: 12px 0 5px; color: #344158; font-size: .82rem; }
+.module-status-card p { margin: 0; color: #7d899a; font-size: .7rem; line-height: 1.5; }
+
+:root[data-theme='dark'] .real-account__card, :root[data-theme='dark'] .module-status-card { border-color: #303b4c; background: #1a2331; box-shadow: 0 10px 34px #0002; }
+:root[data-theme='dark'] .section-heading h1, :root[data-theme='dark'] .section-heading h2 { color: #edf2fb; }
+:root[data-theme='dark'] .section-description { color: #aab5c7; }
+:root[data-theme='dark'] .real-account__card h2, :root[data-theme='dark'] .module-status-card h3 { color: #e0e7f1; }
+:root[data-theme='dark'] .real-account__card dt, :root[data-theme='dark'] .module-status-card p { color: #a6b2c3; }
+:root[data-theme='dark'] .real-account__card dd { color: #e0e7f1; }
+:root[data-theme='dark'] .real-account__card dl div { border-color: #303b4b; }
+:root[data-theme='dark'] .module-status-card__status { border-color: #625334; background: #302a1d; color: #e8d6a8; }
+:root[data-theme='dark'] .account-role-badge { border-color: #39496c; background: #202d49; color: #c2d0ff; }
+
+@media (max-width: 900px) {
+  .module-status-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .section-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
+}

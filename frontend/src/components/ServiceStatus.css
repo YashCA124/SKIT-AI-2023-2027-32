@@ -1,0 +1,29 @@
+.service-panel { margin-top: 18px; border: 1px solid #e8ecf3; border-radius: 18px; padding: 20px; background: #fff; box-shadow: 0 10px 34px #253a620c; }
+.service-panel__heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 14px; }
+.service-panel__heading .eyebrow { margin-bottom: 5px; }
+.service-panel__heading h2 { margin: 0; color: #26354c; font-size: 1.05rem; }
+.secondary-button { min-height: 38px; border: 1px solid #e3e8f0; border-radius: 9px; padding: 0 13px; background: #fff; color: #536176; font-size: .74rem; font-weight: 700; }
+.secondary-button:hover:not(:disabled) { border-color: #c7d2f5; color: #315ce8; }
+.secondary-button:disabled { cursor: wait; opacity: .65; }
+.service-state { display: flex; align-items: center; gap: 10px; border: 1px solid #e8ecf2; border-radius: 10px; padding: 11px; background: #fbfcfe; }
+.service-state__dot { width: 9px; height: 9px; border-radius: 50%; background: #e3a53e; }
+.service-state--healthy .service-state__dot { background: #2eaa74; box-shadow: 0 0 0 4px #e6f7ef; }
+.service-state--unavailable .service-state__dot { background: #d86b72; box-shadow: 0 0 0 4px #fff0f0; }
+.service-state > span:last-child { display: grid; gap: 3px; }
+.service-state strong { color: #455268; font-size: .74rem; }
+.service-state small { color: #8792a2; font-size: .67rem; }
+.service-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 9px 0 0; }
+.service-details > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid #eff1f5; padding: 10px 1px; font-size: .68rem; }
+.service-details dt { color: #8792a2; }
+.service-details dd { margin: 0; color: #4b596f; font-weight: 700; text-align: right; }
+
+:root[data-theme='dark'] .service-panel { border-color: #303b4c; background: #1a2331; box-shadow: 0 10px 34px #0002; }
+:root[data-theme='dark'] .secondary-button { border-color: #374356; background: #202b3b; color: #d4dceb; }
+:root[data-theme='dark'] .service-state { border-color: #354052; background: #202a38; }
+:root[data-theme='dark'] .service-state strong, :root[data-theme='dark'] .service-details dd { color: #d5deeb; }
+:root[data-theme='dark'] .service-state small, :root[data-theme='dark'] .service-details dt { color: #a6b2c3; }
+:root[data-theme='dark'] .service-details > div { border-color: #303b4b; }
+
+@media (max-width: 480px) {
+  .service-details { grid-template-columns: minmax(0, 1fr); }
+}

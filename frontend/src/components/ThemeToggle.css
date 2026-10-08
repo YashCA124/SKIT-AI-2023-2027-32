@@ -1,0 +1,9 @@
+.theme-toggle { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #e2e7f0; border-radius: 9px; padding: 0 11px; background: #fff; color: #536176; font-size: .72rem; font-weight: 700; white-space: nowrap; }
+.theme-toggle:hover { border-color: #bdcaff; color: #315ce8; }
+.theme-toggle > span:first-child { font-size: .95rem; }
+
+:root[data-theme='dark'] .theme-toggle { border-color: #374356; background: #202b3b; color: #d4dceb; }
+
+@media (max-width: 480px) {
+  .theme-toggle { min-height: 34px; padding: 0 9px; font-size: .68rem; }
+}
