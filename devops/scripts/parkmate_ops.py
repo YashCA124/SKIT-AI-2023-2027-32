@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import secrets
 import socket
 import subprocess
 import sys
@@ -28,6 +29,7 @@ REQUIRED_KEYS = (
     "POSTGRES_PASSWORD",
     "POSTGRES_DB",
     "DATABASE_URL",
+    "JWT_SECRET_KEY",
     "REDIS_HOST",
     "REDIS_PORT",
     "REDIS_URL",
@@ -58,9 +60,9 @@ def load_env_file(path: Path) -> dict[str, str]:
 
 
 def merged_env() -> dict[str, str]:
-    env = dict(os.environ)
-    env.update(load_env_file(ENV_EXAMPLE))
+    env = load_env_file(ENV_EXAMPLE)
     env.update(load_env_file(ENV_FILE))
+    env.update(os.environ)
     return env
 
 
@@ -126,12 +128,48 @@ def cmd_validate_env() -> int:
     if missing_local and not ENV_FILE.exists():
         print("warning: copy .env.example to .env before bringing the stack up")
 
-    database_url = (local.get("DATABASE_URL") or example.get("DATABASE_URL", ""))
-    if not database_url.startswith("postgresql://"):
-        print("DATABASE_URL must start with postgresql://")
+    values = merged_env()
+    missing_secrets = [
+        key for key in ("POSTGRES_PASSWORD", "JWT_SECRET_KEY") if not values.get(key)
+    ]
+    if missing_secrets:
+        print("required secrets are missing or blank:")
+        for key in missing_secrets:
+            print(f"  - {key}")
+        return 1
+
+    database_url = values.get("DATABASE_URL", "")
+    if not database_url.startswith(("postgresql://", "postgresql+psycopg2://")):
+        print("DATABASE_URL must use a PostgreSQL URL")
         return 1
 
     print("env looks valid for ParkMate Compose")
+    return 0
+
+
+def cmd_init_env() -> int:
+    if ENV_FILE.exists():
+        print(f"{ENV_FILE} already exists; refusing to overwrite it")
+        return 1
+    if not ENV_EXAMPLE.is_file():
+        print(f"{ENV_EXAMPLE} is missing")
+        return 1
+
+    lines = ENV_EXAMPLE.read_text(encoding="utf-8").splitlines()
+    generated = {
+        "POSTGRES_PASSWORD": secrets.token_hex(24),
+        "JWT_SECRET_KEY": secrets.token_hex(32),
+    }
+    updated_lines = []
+    for line in lines:
+        key, separator, _ = line.partition("=")
+        if separator and key in generated:
+            line = f"{key}={generated[key]}"
+        updated_lines.append(line)
+
+    ENV_FILE.write_text("\n".join(updated_lines) + "\n", encoding="utf-8")
+    ENV_FILE.chmod(0o600)
+    print(f"created {ENV_FILE} with fresh local secrets; do not commit this file")
     return 0
 
 
@@ -276,6 +314,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
+    sub.add_parser("init-env", help="create a local .env with fresh secrets")
     sub.add_parser("validate-env", help="check required ParkMate env keys")
     health = sub.add_parser("health", help="probe API /health and /ready")
     health.add_argument(
@@ -293,6 +332,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> int:
     parser = build_parser()
     args = parser.parse_args()
+    if args.command == "init-env":
+        return cmd_init_env()
     if args.command == "validate-env":
         return cmd_validate_env()
     if args.command == "health":

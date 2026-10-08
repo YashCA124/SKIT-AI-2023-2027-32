@@ -2,7 +2,7 @@ from core.db import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, Index, Numeric, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
-from available_status import AvailableStatus
+from .available_status import AvailableStatus
 
 def enum_values(enum_cls):
     return [e.value for e in enum_cls]

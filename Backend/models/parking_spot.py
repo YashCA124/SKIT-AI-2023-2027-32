@@ -1,7 +1,7 @@
 from core.db import Base
 from sqlalchemy import Column, Integer, ForeignKey, UniqueConstraint, Enum as SQLEnum
-from booking_status import BookingStatus
-from available_status import AvailableStatus
+from .booking_status import BookingStatus
+from .available_status import AvailableStatus
 
 def enum_values(enum_cls):
     return [e.value for e in enum_cls]
