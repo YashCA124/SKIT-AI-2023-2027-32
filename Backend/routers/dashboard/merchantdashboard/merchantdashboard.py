@@ -1,13 +1,15 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from dependencies import MerchantId
+from core.role_check import require_role
+from models.user_type import UserType
 
 router = APIRouter(tags=["merchant"])
 
-
-@router.get("/merchantdashboard")
-def merchant_dashboard(user_id: MerchantId):
+@router.get(
+    "/merchantdashboard", 
+    dependencies=[Depends(require_role(UserType.MERCHANT))]
+)
+def merchant_dashboard():
     return {
-        "message": "Merchant Login Approved",
-        "user id": user_id,
+        "message": "Merchant Dashboard"
     }
