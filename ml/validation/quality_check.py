@@ -201,6 +201,32 @@ def check_missing_booking_ids(df):
         "missing_booking_id_count": missing_count
     }
 
+def calculate_quality_score(report):
+
+    checks = report["checks"]
+
+    if not checks:
+        return 0
+
+    total = len(checks)
+    passed = 0
+
+    for result in checks.values():
+
+        if not isinstance(result, dict):
+            continue
+
+        if result.get("status") in [
+            "passed",
+            "skipped"
+        ]:
+            passed += 1
+
+    return round(
+        (passed / total) * 100,
+        2
+    )
+
 def run_quality_checks(df):
 
     if df.empty:
@@ -247,18 +273,26 @@ def run_quality_checks(df):
             if result.get("status") == "failed":
                 failed_checks.append(name)
 
+    quality_score = calculate_quality_score({
+    "checks": checks
+})
+
     return {
 
-        "overall_status":
-            "FAILED"
-            if failed_checks
-            else "PASSED",
+    "overall_status":
+        "FAILED"
+        if failed_checks
+        else "PASSED",
 
-        "row_count": len(df),
+    "quality_score":
+        quality_score,
 
-        "failed_checks":
-            failed_checks,
+    "row_count":
+        len(df),
 
-        "checks":
-            checks
-    }
+    "failed_checks":
+        failed_checks,
+
+    "checks":
+        checks
+}
