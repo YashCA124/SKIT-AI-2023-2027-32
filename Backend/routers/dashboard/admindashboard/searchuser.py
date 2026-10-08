@@ -4,11 +4,11 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session, selectinload
 
-from database import get_db
-from extensions import redis_client
+from core.db import get_db
+from core.redis_client import redis_client
 from models import ParkingBooking, ParkingSpot, Floor, User, UserType, BookingStatus
-from rolecheck.role_required import require_role
-from schemas import ActiveBooking, CompletedBooking, UserSchema  # marshmallow, still used for serialization
+from core.role_check import require_role
+from schemas import ActiveBooking, CompletedBooking, UserSchema  
 
 router = APIRouter(tags=["Admin"])
 
