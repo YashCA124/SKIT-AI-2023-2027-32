@@ -5,9 +5,9 @@ const THEME_KEY = 'parkwise.theme.v1'
 
 function getInitialTheme() {
   try {
-    return localStorage.getItem(THEME_KEY) === 'dark' ? 'dark' : 'light'
+    return localStorage.getItem(THEME_KEY) || 'dark'
   } catch {
-    return 'light'
+    return 'dark'
   }
 }
 

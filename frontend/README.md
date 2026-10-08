@@ -110,7 +110,8 @@ provide the corresponding routes. A development-only **Preview pages without
 backend** link on the login page lets frontend work inspect role routes using
 clearly labeled fictional, in-memory preview accounts. It makes no auth or
 health requests and is not included in production routes or bundles. Real
-sign-in remains API-backed.
+sign-in remains API-backed. Use **Exit preview** on the role chooser or
+**Sign out** from a preview page to return to login.
 
 `Backend/main.py` currently mounts auth, token, health, and readiness routers.
 Dashboard source files exist, but the active application does not mount those

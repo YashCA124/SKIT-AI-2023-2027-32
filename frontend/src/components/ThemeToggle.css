@@ -1,6 +1,7 @@
 .theme-toggle { display: inline-flex; min-height: 36px; align-items: center; justify-content: center; gap: 7px; border: 1px solid #e2e7f0; border-radius: 9px; padding: 0 11px; background: #fff; color: #536176; font-size: .72rem; font-weight: 700; white-space: nowrap; }
 .theme-toggle:hover { border-color: #bdcaff; color: #315ce8; }
-.theme-toggle > span:first-child { font-size: .95rem; }
+.theme-toggle > span:first-child { display: grid; width: 16px; height: 16px; place-items: center; }
+.theme-toggle svg { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; }
 
 :root[data-theme='dark'] .theme-toggle { border-color: #374356; background: #202b3b; color: #d4dceb; }
 

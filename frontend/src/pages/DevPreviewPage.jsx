@@ -31,6 +31,9 @@ export default function DevPreviewPage() {
           </button>
         ))}
       </div>
+      <button className="dev-preview-exit" type="button" onClick={() => navigate('/login', { replace: true })}>
+        Exit preview
+      </button>
     </AuthLayout>
   )
 }

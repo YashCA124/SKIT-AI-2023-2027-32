@@ -6,7 +6,10 @@
 .dev-preview-option strong { font-size: .82rem; }
 .dev-preview-option small { color: #8490a1; font-size: .7rem; }
 .dev-preview-option > span:last-child { font-size: 1.1rem; }
+.dev-preview-exit { min-height: 38px; margin-top: 14px; border: 0; padding: 0 2px; background: transparent; color: #536bd0; font-size: .78rem; font-weight: 750; }
+.dev-preview-exit:hover { text-decoration: underline; }
 
 :root[data-theme='dark'] .dev-preview-warning { border-color: #625334; background: #302a1d; color: #e8d6a8; }
 :root[data-theme='dark'] .dev-preview-option { border-color: #374356; background: #202b3b; color: #d4dceb; }
 :root[data-theme='dark'] .dev-preview-option small { color: #a6b2c3; }
+:root[data-theme='dark'] .dev-preview-exit { color: #bdcaff; }
