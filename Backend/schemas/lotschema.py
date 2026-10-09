@@ -10,21 +10,11 @@ from sqlalchemy.orm import Session
 from models import ParkingLot, Floor, ParkingSpot, AvailableStatus, BookingStatus
 from filehandling import postal_patterns
 
-
-# ---------------------------------------------------------------------------
-# Floor sub-schema (adjust fields to match your actual FloorSchema)
-# ---------------------------------------------------------------------------
 class FloorCreate(BaseModel):
     floor_id: int
     total_spots: int
     available: str = "ACTIVE"
 
-    # Any FloorSchema-specific field validators should be added here.
-
-
-# ---------------------------------------------------------------------------
-# Lot schema
-# ---------------------------------------------------------------------------
 class LotCreate(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -43,8 +33,6 @@ class LotCreate(BaseModel):
 
     latitude: float
     longitude: float
-
-    # -- per-field validators (equivalent of @validates(...)) --------------
 
     @field_validator("price")
     @classmethod
@@ -98,8 +86,6 @@ class LotCreate(BaseModel):
             raise ValueError("Invalid postal code")
 
         return value
-
-    # -- cross-field validation (equivalent of @validates_schema) ----------
 
     @model_validator(mode="after")
     def validate_lot(self) -> "LotCreate":

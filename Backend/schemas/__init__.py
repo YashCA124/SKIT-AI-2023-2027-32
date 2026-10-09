@@ -20,6 +20,9 @@ from .bookingsearch import BookingSearchSchema, BookingSearchResponse
 from .floorschema import FloorSchema
 from .addfloor import AddFloorSchema
 from .floorspot import FloorSpotSchema, AddSpotsSchema
+from .lotid import LotID
+from .lotfloor import LotFloorSchema
+from .userschema import UserCreate, UserRead
 
 __all__ = [
     "User",
@@ -48,6 +51,10 @@ __all__ = [
     "UserOut",
     "LoginResponse",
     "UserLoginResponse",
+    "LotID",
+    "LotFloorSchema",
+    "UserCreate",
+    "UserRead",
     "FloorCreate",
     "LotCreate",
     "build_lot",
