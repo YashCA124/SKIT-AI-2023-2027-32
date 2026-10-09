@@ -1,47 +1,55 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-import jwt
-from models import UserType
+from sqlalchemy.orm import Session
 
-# HTTPBearer automatically handles extracting the token from the "Authorization: Bearer <token>" header.
-# It also naturally ignores OPTIONS requests when configured properly with FastAPI's CORSMiddleware.
-security = HTTPBearer()
+from core.db import get_db
+from core.security import get_current_claims
+from models import User, UserType
 
-# Replace with your actual secret key and algorithm settings
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
 
 def require_role(required_role: UserType):
-    """
-    FastAPI dependency that enforces role-based access control using JWT claims.
-    Usage in a route: @app.get("/endpoint", dependencies=[Depends(role_required(UserType.ADMIN))])
-    """
-    def role_checker(credentials: HTTPAuthorizationCredentials = Depends(security)):
-        token = credentials.credentials
-        
-        try:
-            # Decode the token to extract the claims (payload)
-            claims = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has expired"
-            )
-        except jwt.PyJWTError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication credentials"
-            )
-
-        # Verify the role matches the required role's value
+    def role_checker(claims: dict = Depends(get_current_claims)):
         if claims.get("role") != required_role.value:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access forbidden"
+                detail="Access forbidden",
             )
-            
-        # Returning claims allows the endpoint to use the token payload if needed
-        # e.g., current_user_claims: dict = Depends(role_required(UserType.PARKING_USER))
-        return claims 
+        return claims
+
+    return role_checker
+
+
+def get_current_user(
+    claims: dict = Depends(get_current_claims),
+    db: Session = Depends(get_db),
+) -> User:
+    try:
+        user_id = int(claims["sub"])
+    except (KeyError, TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user identity",
+        )
+
+    user = db.get(User, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    return user
+
+
+def require_user_role(required_role: UserType):
+    def role_checker(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if current_user.user_type != required_role:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access forbidden",
+            )
+        return current_user
 
     return role_checker

@@ -1,22 +1,30 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from background_tasks.blockspot import check_and_block_spot
-from dependencies import DbSession, MerchantId
-from errors import api_error, raise_if_error
-from models import AvailableStatus, BookingStatus, Floor, ParkingLot, ParkingSpot
-from schemas import AllID
-from services.availability_checks import (
-    validate_floor_active,
-    validate_lot_active,
-    validate_spot_blockable,
+from core.db import get_db
+from core.role_check import require_user_role
+from models import (
+    AvailableStatus,
+    BookingStatus,
+    Floor,
+    ParkingLot,
+    ParkingSpot,
+    User,
+    UserType,
 )
+from schemas import AllID
 
 router = APIRouter(tags=["merchant"])
 
 
 @router.post("/blockspot")
-def block_spot(payload: AllID, db: DbSession, user_id: MerchantId):
-
+def block_spot(
+    payload: AllID,
+    current_user: User = Depends(
+        require_user_role(UserType.MERCHANT)
+    ),
+    db: Session = Depends(get_db),
+):
     try:
         lot = (
             db.query(ParkingLot)
@@ -25,71 +33,75 @@ def block_spot(payload: AllID, db: DbSession, user_id: MerchantId):
             .first()
         )
 
-        # NOTE: the Flask version called validate_lot_active(lot) before any
-        # None check, which raised AttributeError -> 500 for a missing lot.
         if not lot:
-            raise api_error(404, "Parking lot not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Parking lot not found",
+            )
 
-        if lot.user_id != user_id:
-            raise api_error(403, "Unauthorized")
-
-        raise_if_error(validate_lot_active(lot))
+        if lot.user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Unauthorized",
+            )
 
         floor = (
             db.query(Floor)
-            .filter_by(parking_lot_id=payload.lot_id, floor_id=payload.floor_id)
-            .with_for_update()
-            .first()
-        )
-
-        if not floor:
-            raise api_error(404, "Floor not found")
-
-        raise_if_error(validate_floor_active(floor))
-
-        spot = (
-            db.query(ParkingSpot)
-            .filter_by(floor_id=floor.id, spot_id=payload.spot_id)
-            .with_for_update()
-            .first()
-        )
-
-        if not spot:
-            raise api_error(404, "Spot not found")
-
-        raise_if_error(validate_spot_blockable(spot))
-
-        occupied_spot = (
-            db.query(ParkingSpot)
-            .filter(
-                ParkingSpot.id == spot.id,
-                ParkingSpot.available == AvailableStatus.ACTIVE,
-                ParkingSpot.status != BookingStatus.SPOT_AVAILABLE,
+            .filter_by(
+                parking_lot_id=payload.lot_id,
+                floor_id=payload.floor_id,
             )
             .with_for_update()
             .first()
         )
 
-        if not occupied_spot:
+        if not floor:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Floor not found",
+            )
+
+        spot = (
+            db.query(ParkingSpot)
+            .filter_by(
+                floor_id=floor.id,
+                spot_id=payload.spot_id,
+            )
+            .with_for_update()
+            .first()
+        )
+
+        if not spot:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Spot not found",
+            )
+
+        if (
+            spot.available == AvailableStatus.ACTIVE
+            and spot.status != BookingStatus.SPOT_AVAILABLE
+        ):
+            spot.available = AvailableStatus.PENDING
+            spot_status = "Pending"
+        else:
             spot.available = AvailableStatus.BLOCK
             spot_status = "Blocked"
-        else:
-            spot.available = AvailableStatus.PENDING
-            check_and_block_spot.delay(spot.id)
-            spot_status = "Pending"
 
         db.commit()
+
+        return {
+            "spot_id": payload.spot_id,
+            "status": spot_status,
+            "message": "Block spot request processed",
+        }
 
     except HTTPException:
         db.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
         db.rollback()
-        raise HTTPException(status_code=500, detail={"message": f"error : {str(e)}"})
-
-    return {
-        "spot_id": payload.spot_id,
-        "status": spot_status,
-        "message": "Block spot request processed",
-    }
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
+        )

@@ -9,10 +9,6 @@ from schemas.auth import TokenResponse
 
 router = APIRouter(tags=["tokenauth"])
 
-
-# ---------------------------------------------------------------------------
-# GET /tokenauth/protected
-# ---------------------------------------------------------------------------
 @router.get("/protected")
 def protected_route(claims: dict = Depends(get_current_claims)):
     return {
@@ -21,10 +17,6 @@ def protected_route(claims: dict = Depends(get_current_claims)):
         "role": claims.get("role"),
     }
 
-
-# ---------------------------------------------------------------------------
-# POST /tokenauth/refresh
-# ---------------------------------------------------------------------------
 @router.post("/refresh", response_model=TokenResponse)
 def token_refresh(claims: dict = Depends(get_current_refresh_claims)):
     new_access_token = create_access_token(

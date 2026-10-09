@@ -6,7 +6,7 @@ from geoalchemy2.elements import WKTElement
 from forex_python.converter import CurrencyRates, RatesNotAvailableError
 
 from core.db import get_db
-from core.role_check import require_role
+from core.role_check import require_user_role
 from core.redis_client import redis_client
 from currency import currency
 # from background_tasks import send_email_task
@@ -52,8 +52,10 @@ def get_floor_available_spots(db: Session, floor_id: int) -> int:
 @router.post("/search", response_model=BookingSearchResponse)
 def search_nearby_parking(
     data: BookingSearchSchema,
-    current_user: User = Depends(require_role(UserType.PARKING_USER)),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(
+        require_user_role(UserType.PARKING_USER)
+    ),
+    db: Session = Depends(get_db),
 ):
     radius_km = data.radius_km
     radius_m = radius_km * 1000

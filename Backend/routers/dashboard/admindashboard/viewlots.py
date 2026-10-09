@@ -14,7 +14,7 @@ from schemas import Lot
 
 router = APIRouter()
 
-lots_schema = Lot(many=True)  # existing marshmallow schema reused for output
+lots_schema = Lot(many=True)  
 CACHE_TTL = 120
 
 

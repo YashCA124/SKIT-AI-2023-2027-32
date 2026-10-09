@@ -1,0 +1,248 @@
+ISO,Country,Sovereign,Zip Format,Zip Name,Regex
+AF,Afghanistan,AF,9999,Postal code,\d{4}
+AX,Åland,FI,99999,Postnummer,\d{5}
+AL,Albania,AL,9999,Kodi Postar,\d{4}
+DZ,Algeria,DZ,99999,Code postal,\d{5}
+AS,American Samoa,US,"""96799""",ZIP code,96799
+AD,Andorra,AD,AD999,Postal code,AD\d{3}
+AO,Angola,AO,-,-,
+AI,Anguilla,GB,"""AI-2640""",Postcode,AI\-\d{4}
+AG,Antigua and Barbuda,AG,-,-,-
+AR,Argentina,AR,A9999 AAA,CPA,[A-Z]\d{4}\s[A-Z]{3}
+AM,Armenia,AM,9999,Փոստային ինդեքս,\d{4}
+AW,Aruba,NL,-,-,
+AU,Australia,AU,9999,Postcode,\d{4}
+AT,Austria,AT,9999,PLZ,\d{4}
+AZ,Azerbaijan,AZ,AZ 9999,Poçt indeksi,AZ\s\d{4}
+BS,Bahamas,BS,-,-,
+BH,Bahrain,BH,[9]999,Block,"\d{3,4}"
+BD,Bangladesh,BD,9999,Postal code,\d{4}
+BB,Barbados,BB,99999,Postal code,\d{5}
+BY,Belarus,BY,299999,Паштовы індэкс,2\d{5}
+BE,Belgium,BE,9999,Code postal,\d{4}
+BZ,Belize,BZ,-,-,
+BJ,Benin,BJ,-,-,
+BM,Bermuda,GB,AA 99,Postcode,[A-Z]{2}\s[\dA-Z]{2}
+BT,Bhutan,BT,99999,Postcode,\d{5}
+BO,Bolivia,BO,-,-,
+BA,Bosnia and Herzegovina,BA,99999,Poštanski broj,\d{5}
+BW,Botswana,BW,-,-,
+BV,Bouvet Island,NO,-,Postnummer,
+BR,Brazil,BR,99999-999,CEP,\d{5}\-\d{3}
+IO,British Indian Ocean Territory,GB,"""BBND 1ZZ""",Postcode,BBND 1ZZ
+VG,British Virgin Islands,GB,VG9999,Postcode,VG\d{4}
+BN,Brunei Darussalam,BN,AA9999,Postal code,[A-Z]{2}\d{4}
+BG,Bulgaria,BG,9999,Пощенски код,\d{4}
+BF,Burkina Faso,BF,99999,-,\d{5}
+BI,Burundi,BI,-,-,
+KH,Cambodia,KH,999999,Postal code,\d{6}
+CM,Cameroon,CM,-,-,
+CA,Canada,CA,A9A 9A9,Postal code,[A-Z]\d[A-Z]\s\d[A-Z]\d
+CV,Cape Verde,CV,9999-999,Postal code,\d{4}-\d{3}
+KY,Cayman Islands,GB,KY9-9999,Postcode,KY\d\-\d{4}
+CF,Central African Republic,CF,-,-,
+TD,Chad,TD,-,-,
+CL,Chile,CL,9999999,Código postal,\d{7}
+CN,China,CN,999999,邮政编码,\d{6}
+CX,Christmas Island,AU,"""6798""",Postcode,6798
+CC,Cocos (Keeling) Islands,AU,"""6799""",Postcode,6799
+CO,Colombia,CO,999999,Código postal,\d{6}
+KM,Comoros,KM,-,-,
+CG,Congo-Brazzaville,CG,-,-,
+CD,"Congo, Democratic Republic",CD,9999999,Code postal,\d{7}
+CK,Cook Islands,NZ,-,-,
+CR,Costa Rica,CR,99999,Código postal,\d{5}
+CI,Côte d'Ivoire,CI,-,-,
+HR,Croatia,HR,99999,Postal code,\d{5}
+CU,Cuba,CU,99999,Código postal,\d{5}
+CW,Curaçao,NL,-,-,
+CY,Cyprus,CY,9999,Postal code,\d{4}
+CZ,Czechia,CZ,999 99,PSČ,\d{3}\s\d{2}
+DK,Denmark,DK,9999,Postnummer,\d{4}
+DJ,Djibouti,DJ,-,-,
+DM,Dominica,DM,-,-,
+DO,Dominican Republic,DO,99999,Código postal,\d{5}
+EC,Ecuador,EC,999999,Código postal,\d{6}
+EG,Egypt,EG,99999,الرمز البريدى,\d{5}
+SV,El Salvador,SV,99999,Código postal,\d{5}
+GQ,Equatorial Guinea,GQ,-,-,
+ER,Eritrea,ER,-,-,
+EE,Estonia,EE,99999,Postiindeks,\d{5}
+SZ,Eswatini,SZ,A999,Postal code,[A-Z]\d{3}
+ET,Ethiopia,ET,-,-,
+FK,Falkland Islands,GB,"""FIQQ 1ZZ""",Postcode,FIQQ 1ZZ
+FO,Faroe Islands,DK,999,Postnummer,\d{3}
+FJ,Fiji,FJ,-,-,
+FI,Finland,FI,99999,Postinumero,\d{5}
+FR,France,FR,99999,Code postal,\d{5}
+GF,French Guiana,FR,99999,Code postal,\d{5}
+PF,French Polynesia,FR,99999,Code postal,\d{5}
+TF,French Southern Territories,FR,-,-,
+GA,Gabon,GA,-,-,
+GM,Gambia,GM,-,-,
+GE,Georgia,GE,9999,საფოსტო ინდექსის,\d{4}
+DE,Germany,DE,99999,PLZ,\d{5}
+GH,Ghana,GH,AA-99999-9999,Postcode,[A-Z][A-Z0-9]\-\d{5}\-\d{4}
+GI,Gibraltar,GB,"""GX11 1AA""",Postcode,GX11 1AA
+GR,Greece,GR,999 99,ΤΚ,\d{3}\s\d{2}
+GL,Greenland,DK,9999,Postnummer,\d{4}
+GD,Grenada,GD,-,-,
+GP,Guadeloupe,FR,99999,Code postal,\d{5}
+GU,Guam,US,99999,ZIP code,\d{5}
+GT,Guatemala,GT,99999,Código postal,\d{5}
+GG,Guernsey,GB,GY99 9AA,Postcode,"GY\d{1,2}\s\d[A-Z]{2}"
+GN,Guinea,GN,-,-,
+GW,Guinea-Bissau,GW,-,-,
+GY,Guyana,GY,-,-,
+HT,Haiti,HT,9999,Code postal,\d{4}
+HM,Heard and McDonald Islands,AU,"""7151""",Postcode,7151
+HN,Honduras,HN,-,-,
+HK,Hong Kong,CN,-,-,
+HU,Hungary,HU,9999,Irányítószám,\d{4}
+IS,Iceland,IS,999,Póstnúmer,\d{3}
+IN,India,IN,999999,PIN code,\d{6}
+ID,Indonesia,ID,99999,Kodhe pos,\d{5}
+IR,Iran,IR,9999999999,Postal code,\d{10}
+IQ,Iraq,IQ,99999,Postal code,\d{5}
+IE,Ireland,IE,A99 AAAA,Eircode,[A-Z](\d{2}|6W)\s[A-Z]{4}
+IM,Isle of Man,GB,IM99 9AA,Postcode,"IM\d{1,2}\s\d[A-Z]{2}"
+IL,Israel,IL,99999 99,Postal code,\d{5}\s\d{2}
+IT,Italy,IT,99999,CAP,\d{5}
+JM,Jamaica,JM,-,Postal code,
+JP,Japan,JP,999-9999,郵便番号,\d{3}\-\d{4}
+JE,Jersey,GB,JE9 9AA,Postcode,JE\d\s\d[A-Z]{2}
+JO,Jordan,JO,99999,Postal code,\d{5}
+KZ,Kazakhstan,KZ,A99A9A9,Пошта индексі,[A-Z]\d{2}[A-Z]\d[A-Z]\d
+KE,Kenya,KE,99999,Postal code,\d{5}
+KI,Kiribati,KI,KI0999,Postcode,KI0\d{3}
+XK,Kosovo,XK,99999,Zip codes,
+KW,Kuwait,KW,99999,Postal code,\d{5}
+KG,Kyrgyzstan,KG,999999,Postal code,\d{6}
+LA,Laos,LA,99999,Postal code,\d{5}
+LV,Latvia,LV,9999,Pasta indekss,\d{4}
+LB,Lebanon,LB,9999 9999,Postal code,\d{4}\s\d{4}
+LS,Lesotho,LS,999,Postal code,\d{3}
+LR,Liberia,LR,9999,Postal code,\d{4}
+LY,Libya,LY,99999,Postal code,\d{5}
+LI,Liechtenstein,LI,9999,PLZ,\d{4}
+LT,Lithuania,LT,99999,Pašto kodas,\d{5}
+LU,Luxembourg,LU,9999,Code postal,\d{4}
+MO,Macau,CN,-,-,
+MG,Madagascar,MG,999,Code postal,\d{3}
+MW,Malawi,MW,999999,Postcode,\d{6}
+MY,Malaysia,MY,99999,Postal code,\d{5}
+MV,Maldives,MV,99999,Postcode,\d{5}
+ML,Mali,ML,99999,Code postal,\d{5}
+MT,Malta,MT,AAA 9999,Postal code,"[A-Z]{2,3}\s\d{2,4}"
+MH,Marshall Islands,US,99999,ZIP code,\d{5}
+MQ,Martinique,FR,99999,Code postal,\d{5}
+MR,Mauritania,MR,-,-,
+MU,Mauritius,MU,99999,Post code,"[\dR]\d{3,4}"
+YT,Mayotte,FR,99999,Code postal,\d{5}
+MX,Mexico,MX,99999,Código postal,\d{5}
+FM,Micronesia,US,99999,ZIP code,\d{5}
+UM,Minor Outlying Islands,US,"""96898""",ZIP Code,\d{5}
+MD,Moldova,MD,9999,Coduri poștale,\d{4}
+MC,Monaco,MC,"""98000""",Code postal,9800\d
+MN,Mongolia,MN,99999,Postal code,\d{5}
+ME,Montenegro,ME,99999,Postal code,\d{5}
+MS,Montserrat,GB,MSR9999,Postcode,MSR\d{4}
+MA,Morocco,MA,99999,Code postal,\d{5}
+MZ,Mozambique,MZ,9999,Postal code,\d{4}
+MM,Myanmar,MM,9999999,Postal code,\d{7}
+NA,Namibia,NA,99999,Post Code,\d{5}
+NR,Nauru,NR,"""NRU 68""",Postcode,NRU 68
+NP,Nepal,NP,99999,Postal code,\d{5}
+NL,Netherlands,NL,9999 AA,Postcode,\d{4}\s[A-Z]{2}
+NC,New Caledonia,FR,99999,Code postal,\d{5}
+NZ,New Zealand,NZ,9999,Postal code,\d{4}
+NI,Nicaragua,NI,99999,Código postal,\d{5}
+NE,Niger,NE,9999,Code postal,\d{4}
+NG,Nigeria,NG,999999,Postal code,\d{6}
+NU,Niue,NZ,"""9974""",Postal code,9974
+NF,Norfolk Island,AU,"""2899""",Postcode,28\d{2}
+KP,North Korea,KP,-,-,
+MP,Northern Mariana Islands,US,99999,ZIP code,\d{5}
+NO,Norway,NO,9999,Postnummer,\d{4}
+OM,Oman,OM,999,Postal code,\d{3}
+PK,Pakistan,PK,99999,Postal code,\d{5}
+PW,Palau,US,96999,ZIP code,969\d{2}
+PS,Palestine,PS,P999 9999,Postcode,P\d{3}\s\d{4}
+PA,Panama,PA,-,-,
+PG,Papua New Guinea,PG,999,Postal code,\d{3}
+PY,Paraguay,PY,999999,Código postal,\d{6}
+PE,Peru,PE,99999,Código postal,\d{5}
+PH,Philippines,PH,9999,Postal code,\d{4}
+PN,Pitcairn Islands,GB,"""PCRN 1ZZ""",Postcode,PCRN 1ZZ
+PL,Poland,PL,99-999,Kod pocztowy,\d{2}\-\d{3}
+PT,Portugal,PT,9999-999,Código postal,\d{4}\-\d{3}
+PR,Puerto Rico,US,99999,ZIP code,\d{5}
+QA,Qatar,QA,-,-,
+MK,Republic of North Macedonia,MK,9999,Postal code,\d{4}
+RE,Réunion,FR,99999,Code postal,\d{5}
+RO,Romania,RO,999999,Cod poștal,\d{6}
+RU,Russia,RU,999999,Почтовый индекс,\d{6}
+RW,Rwanda,RW,-,-,
+BL,Saint Barthélemy,FR,99999,Code postal,\d{5}
+SH,"Saint Helena, Ascension and Tristan da Cunha",GB,AAAA 1ZZ,Postcode,[A-Z]{4}\s1ZZ
+KN,Saint Kitts and Nevis,KN,-,-,
+LC,Saint Lucia,LC,LC99 999,Postcode,LC\d{2}\s\d{3}
+MF,Saint Martin,FR,99999,Code postal,\d{5}
+PM,Saint Pierre and Miquelon,FR,99999,Code postal,\d{5}
+VC,Saint Vincent and the Grenadines,VC,VC9999,Postal code,VC\d{4}
+WS,Samoa,WS,WS9999,Postcode,WS\d{4}
+SM,San Marino,SM,99999,CPI,\d{5}
+ST,São Tomé and Príncipe,ST,-,-,
+SA,Saudi Arabia,SA,99999,Postal code,\d{5}
+SN,Senegal,SN,99999,Code postal,\d{5}
+RS,Serbia,RS,99999,Poštanski broj,\d{5}
+SC,Seychelles,SC,-,-,
+SL,Sierra Leone,SL,-,-,
+SG,Singapore,SG,999999,Postal code,\d{6}
+SX,Sint Maarten,NL,-,-,
+SK,Slovakia,SK,999 99,PSČ,\d{3}\s\d{2}
+SI,Slovenia,SI,9999,Poštna številka,\d{4}
+SB,Solomon Islands,SB,-,-,
+SO,Somalia,SO,-,-,
+ZA,South Africa,ZA,9999,Postal code,\d{4}
+GS,South Georgia and Sandwich,GB,"""SIQQ 1ZZ""",Postcode,SIQQ 1ZZ
+KR,South Korea,KR,99999,우편번호,\d{5}
+SS,South Sudan,SS,-,-,
+ES,Spain,ES,99999,Código postal,\d{5}
+LK,Sri Lanka,LK,99999,Postal code,\d{5}
+SD,Sudan,SD,-,-,
+SR,Suriname,SR,-,-,
+SJ,Svalbard and Jan Mayen,NO,9999,Postnummer,\d{4}
+SE,Sweden,SE,999 99,Postnummer,\d{3}\s\d{2}
+CH,Switzerland,CH,9999,NPA,\d{4}
+SY,Syria,SY,-,-,
+TW,Taiwan,CN,999999,Postal code,\d{6}
+TJ,Tajikistan,TJ,999999,Postal code,\d{6}
+TZ,Tanzania,TZ,99999,Postal codes,\d{5}
+TH,Thailand,TH,99999,Postal code,\d{5}
+TL,Timor-Leste,TL,-,-,
+TG,Togo,TG,-,-,
+TK,Tokelau,NZ,-,-,
+TO,Tonga,TO,-,-,
+TT,Trinidad and Tobago,TT,999999,Postal code,\d{6}
+TN,Tunisia,TN,9999,Code postal,\d{4}
+TR,Türkiye,TR,99999,Posta kodu,\d{5}
+TM,Turkmenistan,TM,999999,Postal code,\d{6}
+TC,Turks and Caicos Islands,GB,"""TKCA 1ZZ""",Postcode,TKCA 1ZZ
+TV,Tuvalu,TV,-,-,
+VI,U.S. Virgin Islands,US,99999,ZIP code,\d{5}
+UG,Uganda,UG,99999,Postcodes,
+UA,Ukraine,UA,99999,Поштовий індекс,\d{5}
+AE,United Arab Emirates,AE,-,-,-
+GB,United Kingdom,GB,AA9 9AA,Postcode,"[A-Z]{1,2}[0-9][A-Z0-9]?\s[0-9][A-Z]{2}"
+US,United States,US,99999,ZIP code,\d{5}
+UY,Uruguay,UY,99999,Código postal,\d{5}
+UZ,Uzbekistan,UZ,999999,Postcode,\d{6}
+VU,Vanuatu,VU,-,-,
+VA,Vatican,VA,"""00120""",CAP,120
+VE,Venezuela,VE,9999,Código postal,\d{4}
+VN,Vietnam,VN,99999,Mã bưu chính,\d{5}
+WF,Wallis and Futuna,FR,99999,Code postal,\d{5}
+YE,Yemen,YE,-,-,
+ZM,Zambia,ZM,-,-,
+ZW,Zimbabwe,ZW,-,-,

@@ -3,10 +3,10 @@ import json
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session, selectinload
 
-from database import get_db
-from extensions import redis_client
+from core.db import get_db
+from core.redis_client import redis_client
 from models import ParkingBooking, ParkingSpot, Floor, BookingStatus, UserType
-from rolecheck.role_required import role_required
+from core.role_check import require_role
 from schemas.activebooking import ActiveBooking
 
 router = APIRouter()
@@ -17,7 +17,7 @@ CACHE_TTL = 30
 
 @router.get("/dashboard")
 def get_user_dashboard(
-    current_user=Depends(role_required(UserType.PARKING_USER)),
+    current_user=Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db),
 ):
     # role_required returns the authenticated user (replaces get_jwt_identity)

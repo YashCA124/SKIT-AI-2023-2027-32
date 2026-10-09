@@ -38,7 +38,7 @@ def _bookings_for(db: Session, user_id: int, status: BookingStatus):
     dependencies=[Depends(require_role(UserType.ADMIN))],
 )
 def search_user(
-    user_id: int = Query(..., gt=0),  # replaces the UserID marshmallow schema
+    user_id: int = Query(..., gt=0), 
     db: Session = Depends(get_db),
 ):
     cache_key = f"user:{user_id}"

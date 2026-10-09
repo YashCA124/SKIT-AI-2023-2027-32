@@ -11,7 +11,7 @@ from schemas import User as UserOutput
 
 router = APIRouter()
 
-users_schema = UserOutput(many=True)  # existing marshmallow schema reused
+users_schema = UserOutput(many=True) 
 CACHE_KEY = "all_users"
 CACHE_TTL = 120
 

@@ -1,33 +1,49 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from dependencies import DbSession, MerchantId
-from errors import api_error, raise_if_error
-from models import AvailableStatus, BookingStatus, Floor, ParkingLot, ParkingSpot
+from core.db import get_db
+from core.role_check import require_user_role
+from models import (
+    AvailableStatus,
+    BookingStatus,
+    Floor,
+    ParkingLot,
+    ParkingSpot,
+    User,
+    UserType,
+)
 from schemas import AddFloorSchema
-from services.availability_checks import validate_lot_active
 
 router = APIRouter(tags=["merchant"])
 
 
 @router.post("/addfloor", status_code=status.HTTP_201_CREATED)
-def add_floor(payload: AddFloorSchema, db: DbSession, user_id: MerchantId):
-
+def add_floor(
+    payload: AddFloorSchema,
+    current_user: User = Depends(
+        require_user_role(UserType.MERCHANT)
+    ),
+    db: Session = Depends(get_db),
+):
     lot = db.get(ParkingLot, payload.lot_id)
 
     if not lot:
-        raise api_error(404, "Parking lot not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parking lot not found",
+        )
 
-    if lot.user_id != user_id:
-        raise api_error(403, "Unauthorized access")
-
-    raise_if_error(validate_lot_active(lot))
+    if lot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Unauthorized access",
+        )
 
     try:
         all_spots = []
 
         for floor_data in payload.floor:
-
             floor = Floor(
                 parking_lot_id=lot.id,
                 floor_id=floor_data.floor_number,
@@ -52,19 +68,16 @@ def add_floor(payload: AddFloorSchema, db: DbSession, user_id: MerchantId):
 
     except IntegrityError:
         db.rollback()
-        raise api_error(
-            409, "Duplicate floor number already exists in this parking lot"
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Duplicate floor number or database constraint violation",
         )
 
-    except HTTPException:
-        db.rollback()
-        raise
-
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise HTTPException(
-            status_code=500,
-            detail={"message": "Something went wrong", "error": str(e)},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
         )
 
     return {"message": "Floor successfully created"}
