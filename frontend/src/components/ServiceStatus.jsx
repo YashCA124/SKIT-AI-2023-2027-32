@@ -10,6 +10,8 @@ export default function ServiceStatus() {
   const [status, setStatus] = useState({
     health: 'checking',
     readiness: 'checking',
+    database: null,
+    redis: null,
     service: null,
     environment: null,
     lastChecked: null,
@@ -28,8 +30,10 @@ export default function ServiceStatus() {
       setStatus({
         health: health.status === 'fulfilled' ? 'healthy' : 'unavailable',
         readiness: readiness.status === 'fulfilled'
-          ? readiness.value.database_configured ? 'configured' : 'not configured'
+          ? readiness.value.status === 'ready' ? 'ready' : 'degraded'
           : 'unavailable',
+        database: readiness.status === 'fulfilled' ? readiness.value.database_connected : null,
+        redis: readiness.status === 'fulfilled' ? readiness.value.redis_connected : null,
         service: health.status === 'fulfilled' ? health.value.service : null,
         environment: health.status === 'fulfilled' ? health.value.environment : null,
         lastChecked: new Date(),
@@ -66,7 +70,8 @@ export default function ServiceStatus() {
       <dl className="service-details">
         <div><dt>Service</dt><dd>{status.service || 'Not available'}</dd></div>
         <div><dt>Environment</dt><dd>{status.environment || import.meta.env.MODE}</dd></div>
-        <div><dt>Database</dt><dd>{status.readiness}</dd></div>
+        <div><dt>Database</dt><dd>{status.database === null ? status.readiness : status.database ? 'Connected' : 'Unavailable'}</dd></div>
+        <div><dt>Redis</dt><dd>{status.redis === null ? status.readiness : status.redis ? 'Connected' : 'Unavailable'}</dd></div>
         <div><dt>Last checked</dt><dd>{status.lastChecked ? status.lastChecked.toLocaleTimeString() : 'Not checked yet'}</dd></div>
       </dl>
       {status.error && <Alert>{status.error}</Alert>}
