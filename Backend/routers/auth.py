@@ -2,6 +2,7 @@ import traceback
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from geopy.exc import GeocoderServiceError
 from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -32,7 +33,7 @@ from models import UserType
 from models import Admin, User
 
 router = APIRouter(tags=["auth"])
-geolocator = Nominatim(user_agent="parking_app")
+geolocator = Nominatim(user_agent="parkwise-local-app", timeout=5)
 
 
 # ---------------------------------------------------------------------------
@@ -50,10 +51,10 @@ def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid username or password")
 
     access_token = create_access_token(
-        identity=str(admin.id), additional_claims={"role": UserType.ADMIN.value}
+        identity=admin.username, additional_claims={"role": UserType.ADMIN.value}
     )
     refresh_token = create_refresh_token(
-        identity=str(admin.id), additional_claims={"role": UserType.ADMIN.value}
+        identity=admin.username, additional_claims={"role": UserType.ADMIN.value}
     )
 
     return {
@@ -130,8 +131,8 @@ def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
         email=payload.email,
         phone_no=payload.phone_no,
         password=generate_password_hash(payload.password),
-        address="",
-        pincode="",
+        address=payload.address or "",
+        pincode=payload.pincode or "",
         city=payload.city,
         state=payload.state,
         country=payload.country,
@@ -168,6 +169,12 @@ def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=409, detail="Duplicate email or phone")
+    except GeocoderServiceError as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=503,
+            detail="Location lookup is temporarily unavailable. Try again or share your device location.",
+        ) from e
     except Exception as e:
         db.rollback()
         traceback.print_exc()

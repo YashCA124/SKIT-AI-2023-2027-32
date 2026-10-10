@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => {
   const proxy = env.VITE_API_BASE_URL || !apiTarget
     ? undefined
     : Object.fromEntries(
-      ['/auth', '/tokenauth', '/health', '/ready'].map((path) => [
+      ['/auth', '/tokenauth', '/api', '/health', '/ready'].map((path) => [
         path,
         { target: apiTarget, changeOrigin: true },
       ]),

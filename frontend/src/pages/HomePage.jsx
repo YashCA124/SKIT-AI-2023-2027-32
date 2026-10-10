@@ -68,7 +68,7 @@ export default function HomePage() {
 
       <div className="home-status" role="note">
         <span className="home-status__dot" aria-hidden="true" />
-        <p><strong>Early access:</strong> Account registration and sign-in are available. Live parking search and booking are not connected yet.</p>
+        <p><strong>Local app:</strong> Drivers can search actual merchant listings and save parking sessions. Payments are not configured.</p>
         <Link to={accountPath}>Explore account access <span aria-hidden="true">→</span></Link>
       </div>
 

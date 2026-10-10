@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { getRoleDetails, ROLE_PAGES } from '../config/rolePages.js'
 import ServiceStatus from './ServiceStatus.jsx'
+import Alert from './Alert.jsx'
+import { getAccount } from '../api/parking.js'
 import './AccountOverview.css'
 
 export default function AccountOverview({ session }) {
@@ -36,12 +39,20 @@ export default function AccountOverview({ session }) {
     )
   }
 
-  const knownModules = [
-    { title: 'Driver parking and bookings', description: 'The source includes a user dashboard, but the active API does not mount its route.' },
-    { title: 'Merchant locations and rates', description: 'Merchant dashboard routes are not mounted by the active API.' },
-    { title: 'Administrator users and lots', description: 'Administrator dashboard routes are not mounted by the active API.' },
-    { title: 'Payments', description: 'No payment API or payment provider is configured in this project.' },
-  ]
+  return <LiveAccountOverview session={session} role={role} />
+}
+
+function LiveAccountOverview({ session, role }) {
+  const [account, setAccount] = useState(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let active = true
+    getAccount(session.accessToken)
+      .then((result) => { if (active) setAccount(result) })
+      .catch((requestError) => { if (active) setError(requestError.message) })
+    return () => { active = false }
+  }, [session.accessToken])
 
   return (
     <>
@@ -49,34 +60,43 @@ export default function AccountOverview({ session }) {
         <div>
           <p className="eyebrow">Account overview</p>
           <h1>Welcome, {session.user.name}</h1>
-          <p className="section-description">{import.meta.env.DEV && session.isPreview ? `Viewing the development preview as ${role.label}.` : `Signed in through the connected Parkwise API as ${role.label}.`}</p>
+          <p className="section-description">Signed in through the connected Parkwise API as {role.label}.</p>
         </div>
         <span className="account-role-badge">{role.label}</span>
       </div>
+      {error && <Alert>{`Could not load your profile: ${error}`}</Alert>}
       <section className="real-account__card">
         <h2>Account details</h2>
         <dl>
-          <div><dt>Name</dt><dd>{session.user.name}</dd></div>
-          <div><dt>Account ID</dt><dd>{session.user.id}</dd></div>
+          <div><dt>Name</dt><dd>{account?.name || session.user.name}</dd></div>
+          <div><dt>Account ID</dt><dd>{account?.id || session.user.id}</dd></div>
           <div><dt>Account type</dt><dd>{role.label}</dd></div>
+          {account?.email && <div><dt>Email</dt><dd>{account.email}</dd></div>}
+          {account?.phone_no && <div><dt>Phone</dt><dd>{account.phone_no}</dd></div>}
+          {(account?.city || account?.country) && <div><dt>Location</dt><dd>{[account.city, account.state, account.country].filter(Boolean).join(', ')}</dd></div>}
         </dl>
       </section>
       <section className="module-status-section">
         <div className="section-heading">
           <div>
             <p className="eyebrow">Connected features</p>
-            <h2>Feature availability</h2>
-            <p className="section-description">These areas are unavailable because the current FastAPI app does not expose their dashboard or payment routes.</p>
+            <h2>What you can do</h2>
+            <p className="section-description">Parking locations, reservations, and management records are served by the API and saved in the database.</p>
           </div>
         </div>
         <div className="module-status-grid">
-          {knownModules.map((module) => (
-            <article className="module-status-card" key={module.title}>
-              <span className="module-status-card__status">Not available</span>
-              <h3>{module.title}</h3>
-              <p>{module.description}</p>
+          {ROLE_PAGES[session.user.role]?.filter((page) => page.id !== 'payments').map((page) => (
+            <article className="module-status-card" key={page.id}>
+              <span className="module-status-card__status">Connected</span>
+              <h3>{page.label}</h3>
+              <p>{page.description}</p>
             </article>
           ))}
+          {session.user.role === 'U' && <article className="module-status-card">
+            <span className="module-status-card__status">Not connected</span>
+            <h3>Payments</h3>
+            <p>No payment service is configured; sessions are recorded without charges.</p>
+          </article>}
         </div>
       </section>
       <ServiceStatus />
