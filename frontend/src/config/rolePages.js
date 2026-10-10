@@ -8,7 +8,7 @@ export const ROLE_PAGES = {
   U: [
     { id: 'parking', path: '/user/parking', label: 'Find parking', icon: '⌖', title: 'Parking search', description: 'Search parking locations and availability.' },
     { id: 'bookings', path: '/user/bookings', label: 'My bookings', icon: '▤', title: 'My bookings', description: 'View and manage your parking reservations.' },
-    { id: 'payments', path: '/user/payments', label: 'Payments', icon: '₹', title: 'Payments', description: 'View payment methods and transaction history.' },
+    { id: 'payments', path: '/user/payments', label: 'Payments', icon: '₹', title: 'Payments', description: 'Payments are not configured; no charges are collected.' },
   ],
   M: [
     { id: 'locations', path: '/merchant/locations', label: 'My locations', icon: '⌖', title: 'Parking locations', description: 'Manage your parking locations.' },

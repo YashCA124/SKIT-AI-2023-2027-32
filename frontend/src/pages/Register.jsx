@@ -73,6 +73,8 @@ export default function Register() {
         email: form.get('email').trim(),
         phone_no: form.get('phone_no').trim(),
         password: form.get('password'),
+        address: form.get('address').trim(),
+        pincode: form.get('pincode').trim(),
         city: form.get('city').trim(),
         state: form.get('state').trim(),
         country: form.get('country').trim().toUpperCase(),
@@ -103,6 +105,8 @@ export default function Register() {
           <label>City<input name="city" autoComplete="address-level2" required placeholder="Jaipur" /></label>
           <label>State<input name="state" autoComplete="address-level1" required placeholder="Rajasthan" /></label>
           <label className="form-field--wide">Country code<input name="country" autoComplete="country" required minLength={2} maxLength={2} pattern="[A-Za-z]{2}" placeholder="IN" /></label>
+          <label className="form-field--wide">Street address <span>(optional)</span><input name="address" autoComplete="street-address" maxLength={200} placeholder="House number and street" /></label>
+          <label className="form-field--wide">Postal code <span>(optional)</span><input name="pincode" autoComplete="postal-code" maxLength={10} placeholder="Postal code" /></label>
           <label className="checkbox-field form-field--wide">
             <input type="checkbox" checked={shareLocation} onChange={handleLocationChange} />
             <span>Allow Parkwise to use my current location</span>

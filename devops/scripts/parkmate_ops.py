@@ -30,6 +30,8 @@ REQUIRED_KEYS = (
     "POSTGRES_DB",
     "DATABASE_URL",
     "JWT_SECRET_KEY",
+    "INITIAL_ADMIN_USERNAME",
+    "INITIAL_ADMIN_PASSWORD",
     "REDIS_HOST",
     "REDIS_PORT",
     "REDIS_URL",
@@ -130,7 +132,12 @@ def cmd_validate_env() -> int:
 
     values = merged_env()
     missing_secrets = [
-        key for key in ("POSTGRES_PASSWORD", "JWT_SECRET_KEY") if not values.get(key)
+        key for key in (
+            "POSTGRES_PASSWORD",
+            "JWT_SECRET_KEY",
+            "INITIAL_ADMIN_USERNAME",
+            "INITIAL_ADMIN_PASSWORD",
+        ) if not values.get(key)
     ]
     if missing_secrets:
         print("required secrets are missing or blank:")
@@ -159,6 +166,8 @@ def cmd_init_env() -> int:
     generated = {
         "POSTGRES_PASSWORD": secrets.token_hex(24),
         "JWT_SECRET_KEY": secrets.token_hex(32),
+        "INITIAL_ADMIN_USERNAME": "admin",
+        "INITIAL_ADMIN_PASSWORD": secrets.token_urlsafe(32),
     }
     updated_lines = []
     for line in lines:

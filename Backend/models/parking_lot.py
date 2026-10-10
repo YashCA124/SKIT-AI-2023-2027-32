@@ -12,6 +12,7 @@ class ParkingLot(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     location_name = Column(String, nullable=False)
     price = Column(Numeric(10, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default="INR", server_default="INR")
     country = Column(String(2), nullable=False)
     city = Column(String(100), nullable=False)
     state = Column(String(100), nullable=False)

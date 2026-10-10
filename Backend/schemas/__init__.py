@@ -1,69 +1,47 @@
-from .auth import (
-    AdminLoginRequest,
-    UserLoginRequest,
-    RegistrationRequest,
-    TokenResponse,
-    LocationOut,
-    UserOut,
-    LoginResponse,
-    UserLoginResponse,
-)
+from importlib import import_module
 
-from .outputuserdata import User
-from .outputlotdata import Lot
-from .activebooking import ActiveBooking
-from .releasedrecord import CompletedBooking, ReleasedRecordResponse
-from .allid import AllID, AllIDSchema, ReleaseResponse
-from .bookingcreate import BookingCreateSchema, BookingCreateResponse
-from .bookingextension import ExtendBookingSchema, ExtendBookingResponse
-from .bookingsearch import BookingSearchSchema, BookingSearchResponse
-from .floorschema import FloorSchema
-from .addfloor import AddFloorSchema
-from .floorspot import FloorSpotSchema, AddSpotsSchema
-from .lotid import LotID
-from .lotfloor import LotFloorSchema
-from .userschema import UserCreate, UserRead
+_SCHEMA_MODULES = {
+    "AdminLoginRequest": "auth",
+    "UserLoginRequest": "auth",
+    "RegistrationRequest": "auth",
+    "TokenResponse": "auth",
+    "LocationOut": "auth",
+    "UserOut": "auth",
+    "LoginResponse": "auth",
+    "UserLoginResponse": "auth",
+    "User": "outputuserdata",
+    "Lot": "outputlotdata",
+    "ActiveBooking": "activebooking",
+    "CompletedBooking": "releasedrecord",
+    "ReleasedRecordResponse": "releasedrecord",
+    "AllID": "allid",
+    "AllIDSchema": "allid",
+    "ReleaseResponse": "allid",
+    "BookingCreateSchema": "bookingcreate",
+    "BookingCreateResponse": "bookingcreate",
+    "ExtendBookingSchema": "bookingextension",
+    "ExtendBookingResponse": "bookingextension",
+    "BookingSearchSchema": "bookingsearch",
+    "BookingSearchResponse": "bookingsearch",
+    "FloorSchema": "floorschema",
+    "AddFloorSchema": "addfloor",
+    "FloorSpotSchema": "floorspot",
+    "AddSpotsSchema": "floorspot",
+    "LotID": "lotid",
+    "LotFloorSchema": "lotfloor",
+    "UserCreate": "userschema",
+    "UserRead": "userschema",
+    "FloorCreate": "lotschema",
+    "LotCreate": "lotschema",
+    "build_lot": "lotschema",
+}
 
-__all__ = [
-    "User",
-    "Lot",
-    "ActiveBooking",
-    "CompletedBooking",
-    "ReleasedRecordResponse",
-    "AllID",
-    "AllIDSchema",
-    "ReleaseResponse",
-    "BookingCreateSchema",
-    "BookingCreateResponse",
-    "ExtendBookingSchema",
-    "ExtendBookingResponse",
-    "BookingSearchSchema",
-    "BookingSearchResponse",
-    "FloorSchema",
-    "AddFloorSchema",
-    "FloorSpotSchema",
-    "AddSpotsSchema",
-    "AdminLoginRequest",
-    "UserLoginRequest",
-    "RegistrationRequest",
-    "TokenResponse",
-    "LocationOut",
-    "UserOut",
-    "LoginResponse",
-    "UserLoginResponse",
-    "LotID",
-    "LotFloorSchema",
-    "UserCreate",
-    "UserRead",
-    "FloorCreate",
-    "LotCreate",
-    "build_lot",
-]
+__all__ = list(_SCHEMA_MODULES)
 
 
 def __getattr__(name):
-    if name in {"FloorCreate", "LotCreate", "build_lot"}:
-        from . import lotschema
-
-        return getattr(lotschema, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_name = _SCHEMA_MODULES.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(f".{module_name}", __name__)
+    return getattr(module, name)

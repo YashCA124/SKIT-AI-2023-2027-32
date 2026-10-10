@@ -65,14 +65,13 @@ export default function AccountWorkspace({ children }) {
             <NavLink className={({ isActive }) => `nav-item${isActive ? ' nav-item--active' : ''}`} key={page.id} to={page.path}>
               <span className="nav-item__icon">{page.icon}</span>
               {page.label}
-              <span className="nav-unavailable-mark" aria-label="Unavailable">—</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="module-unavailable-note">
-            <strong>{isPreview ? 'Fictional demo data' : 'Dashboard APIs'}</strong>
-            <p>{isPreview ? 'Temporary sample content; live services are not used.' : 'Not mounted in the current backend.'}</p>
+            <strong>{isPreview ? 'Fictional demo data' : 'Live account data'}</strong>
+            <p>{isPreview ? 'Temporary sample content; live services are not used.' : 'Parking changes are saved through the API.'}</p>
           </div>
           <button className="switch-role-button" type="button" onClick={requestLogout} disabled={logoutPending}>
             {logoutPending ? 'Signing out…' : 'Sign out'}
