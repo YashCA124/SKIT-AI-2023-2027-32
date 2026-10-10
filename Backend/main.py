@@ -9,6 +9,7 @@ from sqlalchemy import func, text
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash
 
+from core.cors import configure_cors
 from core.db import SessionLocal, engine
 from core.redis_client import redis_client
 from models import Admin
@@ -19,6 +20,7 @@ from routers.tokenauth import router as tokenauth_router
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Parking App API")
+configure_cors(app)
 
 
 @app.on_event("startup")
