@@ -1,0 +1,137 @@
+import pandas as pd
+
+
+def validate_timestamps(df):
+
+    result = {
+        "status": "passed",
+        "errors": []
+    }
+
+    if "start_time" not in df.columns:
+        return result
+
+    if "end_time" not in df.columns:
+        return result
+
+    start = pd.to_datetime(
+        df["start_time"],
+        errors="coerce"
+    )
+
+    end = pd.to_datetime(
+        df["end_time"],
+        errors="coerce"
+    )
+
+    # -----------------------------------------
+    # Missing timestamps
+    # -----------------------------------------
+
+    invalid_start = int(
+        start.isna().sum()
+    )
+
+    invalid_end = int(
+        end.isna().sum()
+    )
+
+    if invalid_start > 0:
+
+        result["errors"].append({
+            "type": "invalid_start_time",
+            "count": invalid_start
+        })
+
+    if invalid_end > 0:
+
+        result["errors"].append({
+            "type": "invalid_end_time",
+            "count": invalid_end
+        })
+
+    # -----------------------------------------
+    # End before start
+    # -----------------------------------------
+
+    invalid_order = (
+        end < start
+    ).sum()
+
+    if invalid_order > 0:
+
+        result["errors"].append({
+            "type": "end_before_start",
+            "count": int(invalid_order)
+        })
+
+    # -----------------------------------------
+    # Zero duration
+    # -----------------------------------------
+
+    zero_duration = (
+        end == start
+    ).sum()
+
+    if zero_duration > 0:
+
+        result["errors"].append({
+            "type": "zero_duration",
+            "count": int(zero_duration)
+        })
+
+    # -----------------------------------------
+    # Extremely long parking duration
+    # -----------------------------------------
+
+    duration = (
+        end - start
+    ).dt.total_seconds() / 3600
+
+    unrealistic_duration = (
+        duration > 72
+    ).sum()
+
+    if unrealistic_duration > 0:
+
+        result["errors"].append({
+            "type": "duration_over_72_hours",
+            "count": int(
+                unrealistic_duration
+            )
+        })
+
+    if result["errors"]:
+        result["status"] = "failed"
+
+    return result
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#

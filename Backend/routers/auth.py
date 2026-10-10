@@ -36,9 +36,6 @@ router = APIRouter(tags=["auth"])
 geolocator = Nominatim(user_agent="parkwise-local-app", timeout=5)
 
 
-# ---------------------------------------------------------------------------
-# POST /auth/adminlogin
-# ---------------------------------------------------------------------------
 @router.post("/adminlogin", response_model=LoginResponse)
 def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
     admin = (
@@ -64,10 +61,6 @@ def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
         "user": {"id": admin.id, "name": getattr(admin, "username", ""), "role": UserType.ADMIN.value},
     }
 
-
-# ---------------------------------------------------------------------------
-# POST /auth/userlogin
-# ---------------------------------------------------------------------------
 @router.post("/userlogin", response_model=UserLoginResponse)
 def user_login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter_by(email=payload.email).first()
@@ -115,9 +108,6 @@ def user_login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     }
 
 
-# ---------------------------------------------------------------------------
-# POST /auth/registration
-# ---------------------------------------------------------------------------
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
     if db.query(User).filter_by(email=payload.email).first():
@@ -190,19 +180,21 @@ def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
     }
 
 
-# ---------------------------------------------------------------------------
-# POST /auth/logoutcurrent
-# ---------------------------------------------------------------------------
 @router.post("/logoutcurrent")
 def logout_current(claims: dict = Depends(get_current_claims)):
-    blacklist_token(claims["jti"], expires_seconds=3600)
+    remaining = max(
+        1,
+        int(claims["exp"] - datetime.now(timezone.utc).timestamp()),
+    )
+    blacklist_token(claims["jti"], expires_seconds=remaining)
     return {"message": "Access token successfully logged out"}
 
 
-# ---------------------------------------------------------------------------
-# POST /auth/logoutrefresh
-# ---------------------------------------------------------------------------
 @router.post("/logoutrefresh")
 def logout_refresh(claims: dict = Depends(get_current_refresh_claims)):
-    blacklist_token(claims["jti"], expires_seconds=3600)
+    remaining = max(
+        1,
+        int(claims["exp"] - datetime.now(timezone.utc).timestamp()),
+    )
+    blacklist_token(claims["jti"], expires_seconds=remaining)
     return {"message": "Refresh token successfully logged out"}

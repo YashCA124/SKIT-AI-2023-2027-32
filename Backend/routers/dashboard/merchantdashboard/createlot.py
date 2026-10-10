@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict
 
 from core.db import get_db                    
 from models import UserType, ParkingLot, User
-from auth import require_role, get_current_user  
+from core.role_check import require_role
 from schemas import LotCreate, build_lot 
 
 

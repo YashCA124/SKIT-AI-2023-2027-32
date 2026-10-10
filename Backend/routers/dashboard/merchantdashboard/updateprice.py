@@ -1,41 +1,51 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
 
-from dependencies import DbSession, MerchantId
-from errors import api_error
-from models import ParkingLot
+from core.db import get_db
+from core.role_check import require_user_role
+from models import ParkingLot, User, UserType
 from schemas import UpdatePriceSchema
 
 router = APIRouter(tags=["merchant"])
 
 
 @router.post("/updateprice")
-def update_price(payload: UpdatePriceSchema, db: DbSession, user_id: MerchantId):
-    """
-    The manual type/range checks from the Flask version now live in
-    UpdatePriceSchema, so malformed input returns 422 instead of 400.
-    Everything else behaves identically.
-    """
-
+def update_price(
+    payload: UpdatePriceSchema,
+    current_user: User = Depends(
+        require_user_role(UserType.MERCHANT)
+    ),
+    db: Session = Depends(get_db),
+):
     lot = db.get(ParkingLot, payload.lot_id)
 
     if not lot:
-        raise api_error(404, "Parking lot not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parking lot not found",
+        )
 
-    if lot.user_id != user_id:
-        raise api_error(403, "Unauthorized access")
+    if lot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Unauthorized access",
+        )
 
     if lot.price == payload.new_price:
-        raise api_error(409, "Price already set to this value")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Price already set to this value",
+        )
 
     try:
         lot.price = payload.new_price
         db.commit()
 
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise HTTPException(
-            status_code=500,
-            detail={"message": "Error occurred", "error": str(e)},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error occurred while updating price",
         )
 
     return {"message": "Price updated successfully"}

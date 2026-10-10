@@ -1,9 +1,8 @@
 from fastapi import APIRouter, Depends
-from rolecheck.role_required import require_role
+from core.role_check import require_role
 from models import UserType
 
 router = APIRouter(tags=["Admin"])
-
 
 @router.get(
     "/admin/dashboard",

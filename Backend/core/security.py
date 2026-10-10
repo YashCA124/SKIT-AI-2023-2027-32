@@ -55,11 +55,8 @@ def decode_token(token: str) -> dict:
             detail="Invalid or expired token",
         )
 
-
 def blacklist_token(jti: str, expires_seconds: int = 3600) -> None:
-    """Equivalent of redis_client.setex(f"blacklist:{jti}", 3600, "true")"""
     redis_client.setex(f"blacklist:{jti}", expires_seconds, "true")
-
 
 def _is_blacklisted(jti: str) -> bool:
     return redis_client.get(f"blacklist:{jti}") is not None

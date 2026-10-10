@@ -1,14 +1,13 @@
 import json
 
-from fastapi import APIRouter, Depends, Query
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, selectinload
 
-from database import get_db
-from extensions import redis_client
-from models import ParkingLot, Floor, User as UserModel, UserType
-from rolecheck.role_required import require_role
-from schemas import Lot, User as UserSchema  # marshmallow schemas, still used for serialization
+from core.db import get_db
+from core.redis_client import redis_client
+from core.role_check import require_role
+from models import Floor, ParkingLot, User as UserModel, UserType
+from schemas import Lot, User as UserSchema
 
 router = APIRouter(tags=["Admin"])
 
@@ -23,39 +22,49 @@ user_schema = UserSchema()
     dependencies=[Depends(require_role(UserType.ADMIN))],
 )
 def search_parking_lot(
-    lot_id: int = Query(..., gt=0),  # replaces the LotID marshmallow schema
+    lot_id: int = Query(..., gt=0),
     db: Session = Depends(get_db),
 ):
     cache_key = f"parkinglot:{lot_id}"
 
     try:
         cache_data = redis_client.get(cache_key)
-    except Exception:
-        cache_data = None
-
-    if cache_data:
-        return json.loads(cache_data)
+        if cache_data:
+            if isinstance(cache_data, bytes):
+                cache_data = cache_data.decode("utf-8")
+            return json.loads(cache_data)
+    except (Exception, ValueError):
+        pass
 
     parking_lot = (
         db.query(ParkingLot)
-        .options(selectinload(ParkingLot.floors).selectinload(Floor.spots))
+        .options(
+            selectinload(ParkingLot.floors).selectinload(Floor.spots)
+        )
         .filter(ParkingLot.id == lot_id)
         .first()
     )
 
     if not parking_lot:
-        return JSONResponse(status_code=404, content={"message": "Parking lot not found"})
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parking lot not found",
+        )
 
     user_data = db.get(UserModel, parking_lot.user_id)
 
     result = {
         "message": "Parking lot details retrieved successfully",
         "parking_lot": lot_schema.dump(parking_lot),
-        "user": user_schema.dump(user_data),
+        "user": user_schema.dump(user_data) if user_data else None,
     }
 
     try:
-        redis_client.setex(cache_key, CACHE_TTL, json.dumps(result))
+        redis_client.setex(
+            cache_key,
+            CACHE_TTL,
+            json.dumps(result),
+        )
     except Exception:
         pass
 

@@ -1,31 +1,47 @@
-from .auth import (
-    AdminLoginRequest,
-    UserLoginRequest,
-    RegistrationRequest,
-    TokenResponse,
-    LocationOut,
-    UserOut,
-    LoginResponse,
-    UserLoginResponse,
-)
+from importlib import import_module
 
-__all__ = [
-    "AdminLoginRequest",
-    "UserLoginRequest",
-    "RegistrationRequest",
-    "TokenResponse",
-    "LocationOut",
-    "UserOut",
-    "LoginResponse",
-    "UserLoginResponse",
-    "FloorCreate",
-    "LotCreate",
-]
+_SCHEMA_MODULES = {
+    "AdminLoginRequest": "auth",
+    "UserLoginRequest": "auth",
+    "RegistrationRequest": "auth",
+    "TokenResponse": "auth",
+    "LocationOut": "auth",
+    "UserOut": "auth",
+    "LoginResponse": "auth",
+    "UserLoginResponse": "auth",
+    "User": "outputuserdata",
+    "Lot": "outputlotdata",
+    "ActiveBooking": "activebooking",
+    "CompletedBooking": "releasedrecord",
+    "ReleasedRecordResponse": "releasedrecord",
+    "AllID": "allid",
+    "AllIDSchema": "allid",
+    "ReleaseResponse": "allid",
+    "BookingCreateSchema": "bookingcreate",
+    "BookingCreateResponse": "bookingcreate",
+    "ExtendBookingSchema": "bookingextension",
+    "ExtendBookingResponse": "bookingextension",
+    "BookingSearchSchema": "bookingsearch",
+    "BookingSearchResponse": "bookingsearch",
+    "FloorSchema": "floorschema",
+    "AddFloorSchema": "addfloor",
+    "FloorSpotSchema": "floorspot",
+    "AddSpotsSchema": "floorspot",
+    "LotID": "lotid",
+    "LotFloorSchema": "lotfloor",
+    "UserCreate": "userschema",
+    "UserRead": "userschema",
+    "FloorCreate": "lotschema",
+    "LotCreate": "lotschema",
+    "build_lot": "lotschema",
+}
+
+__all__ = list(_SCHEMA_MODULES)
 
 
 def __getattr__(name):
-    if name in {"FloorCreate", "LotCreate"}:
-        from .lotschema import FloorCreate, LotCreate
-
-        return {"FloorCreate": FloorCreate, "LotCreate": LotCreate}[name]
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_name = _SCHEMA_MODULES.get(name)
+    if module_name is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(f".{module_name}", __name__)
+    return getattr(module, name)

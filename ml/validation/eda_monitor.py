@@ -101,3 +101,31 @@ def generate_eda_summary(df):
         )
 
     return summary
+def generate_hourly_demand(df):
+
+    if df.empty:
+        return []
+
+    if "hour" not in df.columns:
+        return []
+
+    if "parking_lot_id" not in df.columns:
+        return []
+
+    hourly = (
+        df.groupby(
+            [
+                "parking_lot_id",
+                "day_of_week",
+                "hour"
+            ]
+        )
+        .size()
+        .reset_index(
+            name="booking_count"
+        )
+    )
+
+    return hourly.to_dict(
+        orient="records"
+    )

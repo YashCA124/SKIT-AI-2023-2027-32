@@ -6,15 +6,15 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, selectinload
 
-from database import get_db                      # yields a SQLAlchemy Session
-from extensions import redis_client
+from core.db import get_db
+from core.redis_client import redis_client
 from models import ParkingLot, Floor, UserType
-from rolecheck.role_required import role_required  # FastAPI dependency (see notes)
+from core.role_check import require_role
 from schemas import Lot
 
 router = APIRouter()
 
-lots_schema = Lot(many=True)  # existing marshmallow schema reused for output
+lots_schema = Lot(many=True)  
 CACHE_TTL = 120
 
 
@@ -33,7 +33,7 @@ def lot_filters(
     return LotFilters(country_code=country_code, state=state, city=city)
 
 
-@router.get("/parking-lots", dependencies=[Depends(role_required(UserType.ADMIN))])
+@router.get("/parking-lots", dependencies=[Depends(require_role(UserType.ADMIN))])
 def get_all_parking_lots(
     filters: LotFilters = Depends(lot_filters),
     db: Session = Depends(get_db),

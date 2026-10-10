@@ -1,14 +1,13 @@
 import logging
 import os
 from datetime import datetime, timezone
-from werkzeug.security import generate_password_hash
-from sqlalchemy import func
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from redis.exceptions import RedisError
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.security import generate_password_hash
 
 from core.db import SessionLocal, engine
 from core.redis_client import redis_client

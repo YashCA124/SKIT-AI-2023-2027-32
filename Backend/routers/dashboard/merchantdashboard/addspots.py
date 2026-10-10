@@ -1,59 +1,71 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
-from dependencies import DbSession, MerchantId
-from errors import api_error, raise_if_error
-from models import Floor, ParkingLot, ParkingSpot
+from core.db import get_db
+from core.role_check import require_user_role
+from models import Floor, ParkingLot, ParkingSpot, User, UserType
 from schemas import AddSpotsSchema
-from services.availability_checks import validate_floor_active, validate_lot_active
 
 router = APIRouter(tags=["merchant"])
 
 
-@router.post("/addspots")
-def add_spots(payload: AddSpotsSchema, db: DbSession, user_id: MerchantId):
-
+@router.post("/addspots", status_code=status.HTTP_200_OK)
+def add_spots(
+    payload: AddSpotsSchema,
+    current_user: User = Depends(
+        require_user_role(UserType.MERCHANT)
+    ),
+    db: Session = Depends(get_db),
+):
     lot_id = payload.lot_id
     lot = db.get(ParkingLot, lot_id)
 
     if not lot:
-        raise api_error(404, "Parking lot not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Parking lot not found",
+        )
 
-    if lot.user_id != user_id:
-        raise api_error(403, "Unauthorized access")
-
-    raise_if_error(validate_lot_active(lot))
+    if lot.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Unauthorized access",
+        )
 
     try:
         all_spots = []
 
         for floor_data in payload.floor:
-
             floor = (
                 db.query(Floor)
-                .filter_by(parking_lot_id=lot_id, floor_id=floor_data.floor_number)
+                .filter_by(
+                    parking_lot_id=lot_id,
+                    floor_id=floor_data.floor_number,
+                )
                 .with_for_update()
                 .first()
             )
 
             if not floor:
-                raise api_error(
-                    404, f"Floor {floor_data.floor_number} is not available"
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Floor {floor_data.floor_number} is not available",
                 )
-
-            raise_if_error(validate_floor_active(floor))
 
             last_spot = (
                 db.query(func.max(ParkingSpot.spot_id))
                 .filter(ParkingSpot.floor_id == floor.id)
-                .with_for_update()
                 .scalar()
                 or 0
             )
 
             all_spots.extend(
-                ParkingSpot(floor_id=floor.id, spot_id=last_spot + i + 1)
+                ParkingSpot(
+                    floor_id=floor.id,
+                    spot_id=last_spot + i + 1,
+                )
                 for i in range(floor_data.new_spots)
             )
 
@@ -62,17 +74,20 @@ def add_spots(payload: AddSpotsSchema, db: DbSession, user_id: MerchantId):
 
     except IntegrityError:
         db.rollback()
-        raise api_error(409, "Duplicate spot detected")
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Duplicate spot detected",
+        )
 
     except HTTPException:
         db.rollback()
         raise
 
-    except Exception as e:
+    except Exception:
         db.rollback()
         raise HTTPException(
-            status_code=500,
-            detail={"message": "Something went wrong", "error": str(e)},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
         )
 
     return {"message": "Spots successfully added"}
