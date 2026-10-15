@@ -10,7 +10,6 @@ from schemas import AddSpotsSchema
 
 router = APIRouter(tags=["merchant"])
 
-
 @router.post("/addspots", status_code=status.HTTP_200_OK)
 def add_spots(
     payload: AddSpotsSchema,

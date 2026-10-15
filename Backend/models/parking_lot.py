@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Index, Numeric, Enum
 from sqlalchemy.orm import relationship
 from geoalchemy2 import Geography
 from .available_status import AvailableStatus
+import secrets
 
 def enum_values(enum_cls):
     return [e.value for e in enum_cls]
@@ -29,6 +30,13 @@ class ParkingLot(Base):
         ),
         nullable=False,
         default=AvailableStatus.ACTIVE
+    )
+    qr_token = Column(
+        String(64),
+        unique=True,
+        nullable=False,
+        index=True,
+        default=lambda: secrets.token_urlsafe(32),
     )
 
     __table_args__ = (
