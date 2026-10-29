@@ -11,6 +11,8 @@ are not part of the live API:
 - Administrator dashboard: `routers/dashboard/admindashboard/admindashboard.py`,
   `searchlot.py`, `searchuser.py`, `viewlots.py`, and `viewusers.py`
 
-There is no booking API router/endpoint in `Backend/routers`. The existing
-`ParkingBooking` model and the driver's dashboard source do not provide a
-working booking API.
+The live API includes booking creation, listing, and completion in
+`routers/parking_api.py`. Ending a booking creates a pending `DEMO` payment
+for the final time-based total; the owner can simulate success or failure with
+`POST /api/payments/{payment_id}/simulate`. This mock flow does not connect to
+a payment provider or collect payment credentials.

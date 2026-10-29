@@ -18,6 +18,10 @@ class BookingCreate(BaseModel):
         return value
 
 
+class DemoPaymentSimulation(BaseModel):
+    outcome: Literal["SUCCESS", "FAILED"]
+
+
 class FloorCreate(BaseModel):
     floor_id: int = Field(ge=-10, le=100)
     total_spots: int = Field(gt=0, le=500)

@@ -3,6 +3,7 @@ from .parking_lot import ParkingLot
 from .parking_spot import ParkingSpot
 from .floor import Floor
 from .parking_booking import ParkingBooking
+from .payment import Payment
 from .admin import Admin
 from .user_type import UserType
 from .booking_status import BookingStatus
@@ -13,6 +14,7 @@ __all__ = [
     "ParkingLot",
     "ParkingSpot",
     "ParkingBooking",
+    "Payment",
     "Floor",
     "Admin",
     "UserType",

@@ -30,6 +30,7 @@ class ParkingBooking(Base):
     exchange_rate = Column(Numeric(10, 4), nullable=False)  
     spot = relationship('ParkingSpot')
     user = relationship('User')
+    payment = relationship('Payment', back_populates='booking', uselist=False)
 
     @property
     def get_local_parking_timestamp(self):

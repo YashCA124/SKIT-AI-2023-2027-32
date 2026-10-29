@@ -1,5 +1,7 @@
+import os
 from datetime import datetime, timezone
 from decimal import Decimal
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from geoalchemy2.elements import WKTElement
@@ -15,11 +17,19 @@ from models import (
     Floor,
     ParkingBooking,
     ParkingLot,
+    Payment,
     ParkingSpot,
     User,
     UserType,
 )
-from schemas.parking import BookingCreate, LotCreate, LotStatusUpdate, LotUpdate, UserRoleUpdate
+from schemas.parking import (
+    BookingCreate,
+    DemoPaymentSimulation,
+    LotCreate,
+    LotStatusUpdate,
+    LotUpdate,
+    UserRoleUpdate,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -152,6 +162,18 @@ def _booking_payload(booking: ParkingBooking) -> dict:
         "total_cost": (
             float(booking.get_total_cost) if booking.get_total_cost is not None else None
         ),
+        "payment": _payment_payload(booking.payment) if booking.payment else None,
+    }
+
+
+def _payment_payload(payment: Payment) -> dict:
+    return {
+        "id": payment.id,
+        "provider": payment.provider,
+        "transaction_reference": payment.transaction_reference,
+        "amount": float(payment.amount),
+        "currency": payment.currency,
+        "status": payment.status,
     }
 
 
@@ -248,7 +270,8 @@ def get_bookings(
         .options(
             selectinload(ParkingBooking.spot)
             .selectinload(ParkingSpot.floor)
-            .selectinload(Floor.parking_lot)
+            .selectinload(Floor.parking_lot),
+            selectinload(ParkingBooking.payment),
         )
         .filter_by(user_id=principal["id"])
         .order_by(ParkingBooking.parking_timestamp.desc())
@@ -279,9 +302,60 @@ def end_booking(
     booking.leaving_timestamp = datetime.now(timezone.utc)
     booking.status = BookingStatus.BOOKING_COMPLETED
     booking.spot.status = BookingStatus.SPOT_AVAILABLE
+    payment = Payment(
+        booking=booking,
+        provider="DEMO",
+        amount=Decimal(str(booking.get_total_cost)),
+        currency=booking.currency,
+        status="PENDING",
+    )
+    db.add(payment)
     db.commit()
     db.refresh(booking)
     return _booking_payload(booking)
+
+
+@router.post("/payments/{payment_id}/simulate")
+def simulate_demo_payment(
+    payment_id: int,
+    payload: DemoPaymentSimulation,
+    principal: dict = Depends(require_role(UserType.PARKING_USER)),
+    db: Session = Depends(get_db),
+):
+    if os.getenv("APP_ENV", "development").lower() not in {
+        "development",
+        "demo",
+        "test",
+    }:
+        raise HTTPException(
+            status_code=503,
+            detail="Demo payment simulation is disabled outside development/demo environments",
+        )
+
+    payment = (
+        db.query(Payment)
+        .join(ParkingBooking)
+        .filter(
+            Payment.id == payment_id,
+            ParkingBooking.user_id == principal["id"],
+        )
+        .with_for_update()
+        .first()
+    )
+    if payment is None:
+        raise HTTPException(status_code=404, detail="Payment was not found")
+    if payment.status != "PENDING":
+        raise HTTPException(status_code=409, detail="Payment has already been processed")
+
+    if payload.outcome == "SUCCESS":
+        payment.status = "SUCCEEDED"
+        payment.transaction_reference = f"DEMO_{uuid4().hex}"
+    else:
+        payment.status = "FAILED"
+
+    db.commit()
+    db.refresh(payment)
+    return {"payment": _payment_payload(payment)}
 
 
 @router.get("/merchant/lots")

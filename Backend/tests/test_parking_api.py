@@ -2,7 +2,7 @@ import os
 import unittest
 from datetime import datetime, timedelta, timezone
 from decimal import Decimal
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 os.environ.setdefault(
     "DATABASE_URL",
@@ -12,9 +12,23 @@ os.environ.setdefault("JWT_SECRET_KEY", "test-only-not-for-deployment")
 
 from fastapi import HTTPException
 
-from models import AvailableStatus, BookingStatus, Floor, ParkingBooking, ParkingLot, ParkingSpot, UserType
-from routers.parking_api import create_booking, end_booking, require_role
-from schemas.parking import BookingCreate, LotCreate
+from models import (
+    AvailableStatus,
+    BookingStatus,
+    Floor,
+    ParkingBooking,
+    ParkingLot,
+    ParkingSpot,
+    Payment,
+    UserType,
+)
+from routers.parking_api import (
+    create_booking,
+    end_booking,
+    require_role,
+    simulate_demo_payment,
+)
+from schemas.parking import BookingCreate, DemoPaymentSimulation, LotCreate
 
 
 def parking_objects(spot_status=BookingStatus.SPOT_AVAILABLE):
@@ -53,6 +67,7 @@ class ParkingApiTests(unittest.TestCase):
         paths = set(app.openapi()["paths"])
         self.assertIn("/api/parking/lots", paths)
         self.assertIn("/api/bookings", paths)
+        self.assertIn("/api/payments/{payment_id}/simulate", paths)
         self.assertIn("/api/merchant/lots", paths)
         self.assertIn("/api/admin/users", paths)
 
@@ -117,7 +132,69 @@ class ParkingApiTests(unittest.TestCase):
         self.assertEqual(result["status"], BookingStatus.BOOKING_COMPLETED.value)
         self.assertIsNotNone(booking.leaving_timestamp)
         self.assertEqual(spot.status, BookingStatus.SPOT_AVAILABLE)
+        payment = db.add.call_args.args[0]
+        self.assertEqual(payment.booking, booking)
+        self.assertEqual(payment.status, "PENDING")
+        self.assertEqual(payment.currency, "INR")
         db.commit.assert_called_once()
+
+    def test_demo_payment_simulation_marks_payment_successful(self):
+        payment = Payment(
+            id=31,
+            booking_id=12,
+            provider="DEMO",
+            amount=Decimal("26.25"),
+            currency="INR",
+            status="PENDING",
+        )
+        db = MagicMock()
+        db.query.return_value.join.return_value.filter.return_value.with_for_update.return_value.first.return_value = payment
+
+        result = simulate_demo_payment(
+            31,
+            DemoPaymentSimulation(outcome="SUCCESS"),
+            {"id": 17, "role": UserType.PARKING_USER.value},
+            db,
+        )
+
+        self.assertEqual(result["payment"]["status"], "SUCCEEDED")
+        self.assertTrue(result["payment"]["transaction_reference"].startswith("DEMO_"))
+        db.commit.assert_called_once()
+
+    def test_demo_payment_simulation_marks_payment_failed(self):
+        payment = Payment(
+            id=31,
+            booking_id=12,
+            provider="DEMO",
+            amount=Decimal("26.25"),
+            currency="INR",
+            status="PENDING",
+        )
+        db = MagicMock()
+        db.query.return_value.join.return_value.filter.return_value.with_for_update.return_value.first.return_value = payment
+
+        result = simulate_demo_payment(
+            31,
+            DemoPaymentSimulation(outcome="FAILED"),
+            {"id": 17, "role": UserType.PARKING_USER.value},
+            db,
+        )
+
+        self.assertEqual(result["payment"]["status"], "FAILED")
+        self.assertIsNone(result["payment"]["transaction_reference"])
+        db.commit.assert_called_once()
+
+    def test_demo_payment_simulation_is_disabled_in_production(self):
+        with patch.dict(os.environ, {"APP_ENV": "production"}):
+            with self.assertRaises(HTTPException) as raised:
+                simulate_demo_payment(
+                    31,
+                    DemoPaymentSimulation(outcome="SUCCESS"),
+                    {"id": 17, "role": UserType.PARKING_USER.value},
+                    MagicMock(),
+                )
+
+        self.assertEqual(raised.exception.status_code, 503)
 
     def test_lot_contract_rejects_duplicate_floor_numbers(self):
         with self.assertRaises(ValueError):
