@@ -1,14 +1,21 @@
-name: Weekly Progress Report Auto-Commit
+name: Progress Report Automation
 
 on:
   schedule:
-    # Runs every Thursday at 11:59 PM IST (18:29 UTC)
-    # Cron format: minute hour day-of-month month day-of-week
-    # 4 = Thursday
+    # Every Thursday at 11:59 PM IST (18:29 UTC)
     - cron: "29 18 * * 4"
 
-  # Allows manual execution from GitHub Actions
   workflow_dispatch:
+    inputs:
+      report_type:
+        description: "Select the report to generate"
+        required: true
+        type: choice
+        options:
+          - weekly
+          - final
+          - both
+        default: weekly
 
 permissions:
   contents: write
@@ -19,43 +26,50 @@ jobs:
 
     steps:
       # Checkout repository with complete Git history
-      - name: Checkout Repository with Full Git History
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Set up Python
+      # Configure Python
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
-      # Install required Python packages
-      - name: Install PDF & Graph Dependencies
+      # Install dependencies
+      - name: Install Dependencies
         run: |
-          pip install reportlab matplotlib
+          pip install reportlab matplotlib pypdf
 
-      # Generate the weekly report
-      - name: Generate Weekly PDF Report
+      # Generate weekly report
+      - name: Generate Weekly Report
+        if: github.event_name == 'schedule' || inputs.report_type == 'weekly' || inputs.report_type == 'both'
         run: |
           python generate_report.py weekly
 
-      # Move the generated report and commit it
-      - name: Archive and Commit Weekly Report
-        run: |
           mkdir -p weekly_reports
 
           mv *_Weekly_Progress_Report_Form-3_*.pdf weekly_reports/
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      # Generate consolidated final report
+      - name: Generate Final Report
+        if: github.event_name == 'workflow_dispatch' && (inputs.report_type == 'final' || inputs.report_type == 'both')
+        run: |
+          python generate_final_report.py
 
-          git add weekly_reports/
+      # Commit and push generated reports
+      - name: Commit and Push Reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add weekly_reports/ final_reports/
 
           if git diff --staged --quiet; then
-            echo "No new changes or reports to commit."
+            echo "No new reports to commit."
           else
-            git commit -m "docs: archive Form-3 weekly progress report [skip ci]"
+            git commit -m "docs: archive progress reports [skip ci]"
             git push
           fi
