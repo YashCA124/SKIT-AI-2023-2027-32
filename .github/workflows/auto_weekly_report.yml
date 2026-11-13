@@ -7,7 +7,6 @@ on:
     # 4 = Thursday
     - cron: "29 18 * * 4"
 
-  # Allows manual execution from GitHub Actions
   workflow_dispatch:
 
 permissions:
