@@ -2,10 +2,6 @@
 """Historical occupancy trends and next-hour forecasting."""
 from __future__ import annotations
 
-import json
-from datetime import timezone
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 from sklearn.dummy import DummyRegressor
@@ -15,14 +11,14 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from config import (
     FEATURE_COLUMNS,
     FORECAST_HORIZON_HOURS,
-    MIN_HOURS_FOR_FORECAST,
     MIN_TRAINING_SAMPLES,
+    MIN_HOURS_FOR_FORECAST,
     PREVIOUS_WINDOW_HOURS,
     RANDOM_STATE,
     RECENT_WINDOW_HOURS,
     TEST_FRACTION,
 )
-from schemas import ModelMetrics
+from analytics.schemas import ModelMetrics
 
 
 def calculate_trend_summary(frame: pd.DataFrame) -> pd.DataFrame:
@@ -199,11 +195,31 @@ def build_supervised_frame(frame: pd.DataFrame) -> pd.DataFrame:
     ).eq(pd.Timedelta(hours=FORECAST_HORIZON_HOURS))
 
     data = data.loc[is_next_hour].copy()
+    forecast_timestamp = data["timestamp"] + pd.Timedelta(
+        hours=FORECAST_HORIZON_HOURS
+    )
+    _set_calendar_features(data, forecast_timestamp)
     data = data.dropna(
         subset=FEATURE_COLUMNS + ["target_occupancy"]
     )
 
     return data.reset_index(drop=True)
+
+
+def _set_calendar_features(
+    data: pd.DataFrame,
+    timestamp: pd.Series,
+) -> None:
+    """Set calendar model features for the timestamp being predicted."""
+    timestamp = pd.to_datetime(timestamp, utc=True)
+    hour = timestamp.dt.hour
+    day_of_week = timestamp.dt.dayofweek
+
+    data["is_weekend"] = day_of_week.isin([5, 6]).astype(int)
+    data["hour_sin"] = np.sin(2 * np.pi * hour / 24)
+    data["hour_cos"] = np.cos(2 * np.pi * hour / 24)
+    data["day_sin"] = np.sin(2 * np.pi * day_of_week / 7)
+    data["day_cos"] = np.cos(2 * np.pi * day_of_week / 7)
 
 
 def _metrics(y_true, y_pred, model_name, train_count, test_count):
@@ -231,24 +247,29 @@ def train_occupancy_model(frame: pd.DataFrame):
     """
     supervised = build_supervised_frame(frame)
 
-    if len(supervised) < MIN_TRAINING_SAMPLES:
-        raise ValueError(
-            f"Need at least {MIN_TRAINING_SAMPLES} supervised rows; "
-            f"found {len(supervised)}. Supply more hourly history."
-        )
-
     supervised = supervised.sort_values(
         ["timestamp", "lot_id"]
     ).reset_index(drop=True)
 
-    split_at = int(len(supervised) * (1 - TEST_FRACTION))
-    split_at = max(1, min(split_at, len(supervised) - 1))
+    timestamps = supervised["timestamp"].drop_duplicates().sort_values()
+    if len(timestamps) < 2:
+        raise ValueError("Need at least two distinct timestamps to split data.")
+    split_at = int(len(timestamps) * (1 - TEST_FRACTION))
+    split_at = max(1, min(split_at, len(timestamps) - 1))
+    split_timestamp = timestamps.iloc[split_at]
 
-    train = supervised.iloc[:split_at]
-    test = supervised.iloc[split_at:]
+    train = supervised.loc[
+        supervised["target_timestamp"] < split_timestamp
+    ]
+    test = supervised.loc[supervised["timestamp"] >= split_timestamp]
 
     if len(train) < MIN_TRAINING_SAMPLES:
-        raise ValueError("Not enough training rows after chronological split.")
+        raise ValueError(
+            f"Need at least {MIN_TRAINING_SAMPLES} training rows after "
+            f"the chronological split; found {len(train)}."
+        )
+    if test.empty:
+        raise ValueError("The chronological holdout contains no test rows.")
 
     x_train = train[FEATURE_COLUMNS]
     y_train = train["target_occupancy"]
@@ -257,7 +278,9 @@ def train_occupancy_model(frame: pd.DataFrame):
 
     baseline = DummyRegressor(strategy="mean")
     baseline.fit(x_train, y_train)
-    baseline_predictions = baseline.predict(x_test)
+    baseline_predictions = np.clip(
+        baseline.predict(x_test), 0, test["capacity"].to_numpy()
+    )
     baseline_metrics = _metrics(
         y_test, baseline_predictions, "dummy_mean_baseline",
         len(train), len(test)
@@ -271,7 +294,9 @@ def train_occupancy_model(frame: pd.DataFrame):
         n_jobs=-1,
     )
     forest.fit(x_train, y_train)
-    forest_predictions = forest.predict(x_test)
+    forest_predictions = np.clip(
+        forest.predict(x_test), 0, test["capacity"].to_numpy()
+    )
     forest_metrics = _metrics(
         y_test, forest_predictions, "random_forest",
         len(train), len(test)
@@ -290,13 +315,32 @@ def train_occupancy_model(frame: pd.DataFrame):
     holdout = test[
         ["lot_id", "timestamp", "target_timestamp", "target_occupancy"]
     ].copy()
-    holdout["predicted_occupancy"] = selected_model.predict(x_test)
+    holdout["predicted_occupancy"] = np.clip(
+        selected_model.predict(x_test),
+        0,
+        test["capacity"].to_numpy(),
+    )
     holdout["predicted_occupancy"] = holdout[
         "predicted_occupancy"
     ].clip(lower=0)
     holdout["absolute_error"] = (
         holdout["target_occupancy"] - holdout["predicted_occupancy"]
     ).abs()
+
+    if selected_name == "random_forest":
+        forecast_model = RandomForestRegressor(
+            n_estimators=250,
+            max_depth=14,
+            min_samples_leaf=2,
+            random_state=RANDOM_STATE,
+            n_jobs=-1,
+        )
+    else:
+        forecast_model = DummyRegressor(strategy="mean")
+    forecast_model.fit(
+        supervised[FEATURE_COLUMNS],
+        supervised["target_occupancy"],
+    )
 
     metadata = {
         "selected_model": selected_name,
@@ -307,6 +351,11 @@ def train_occupancy_model(frame: pd.DataFrame):
         "forecast_horizon_hours": FORECAST_HORIZON_HOURS,
         "training_rows": int(len(train)),
         "testing_rows": int(len(test)),
+        "forecast_model_training_rows": int(len(supervised)),
+        "training_last_target_timestamp": (
+            train["target_timestamp"].max().isoformat()
+        ),
+        "testing_first_timestamp": test["timestamp"].min().isoformat(),
         "evaluated_at_utc": pd.Timestamp.now(tz="UTC").isoformat(),
         "note": (
             "Metrics are a chronological holdout estimate. Validate on "
@@ -314,7 +363,7 @@ def train_occupancy_model(frame: pd.DataFrame):
         ),
     }
 
-    return selected_model, metadata, holdout
+    return forecast_model, metadata, holdout
 
 
 def forecast_next_hour(
@@ -332,6 +381,10 @@ def forecast_next_hour(
     # Build features on the full available history. The target is not needed
     # for inference, but lag and rolling features are.
     featured = add_time_features(data)
+    forecast_timestamp = featured["timestamp"] + pd.Timedelta(
+        hours=FORECAST_HORIZON_HOURS
+    )
+    _set_calendar_features(featured, forecast_timestamp)
     for lag in (1, 2, 3, 24):
         featured[f"occupancy_lag_{lag}"] = (
             featured.groupby("lot_id")["occupancy_count"].shift(lag)
@@ -353,13 +406,18 @@ def forecast_next_hour(
         .tail(1)
         .copy()
     )
+    history_sizes = featured.groupby("lot_id").size()
+    eligible_lots = history_sizes[
+        history_sizes >= MIN_HOURS_FOR_FORECAST
+    ].index
+    latest = latest.loc[latest["lot_id"].isin(eligible_lots)]
     latest = latest.dropna(subset=FEATURE_COLUMNS)
 
     if latest.empty:
         return pd.DataFrame()
 
     predictions = model.predict(latest[FEATURE_COLUMNS])
-    latest["predicted_occupancy"] = predictions.clip(min=0)
+    latest["predicted_occupancy"] = np.maximum(predictions, 0)
     latest["predicted_occupancy"] = np.minimum(
         latest["predicted_occupancy"],
         latest["capacity"],

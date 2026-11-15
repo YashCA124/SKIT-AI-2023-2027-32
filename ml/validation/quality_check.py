@@ -1,7 +1,3 @@
-import pandas as pd
-import numpy as np
-
-
 def check_missing_values(df):
 
     missing = df.isnull().sum()
@@ -10,7 +6,11 @@ def check_missing_values(df):
         missing > 0
     ]
 
-    return missing.to_dict()
+    return {
+        "status": "failed" if not missing.empty else "passed",
+        "missing_by_column": missing.to_dict(),
+        "missing_count": int(missing.sum()),
+    }
 
 
 def check_duplicates(df):

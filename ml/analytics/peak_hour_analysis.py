@@ -17,6 +17,9 @@ from config import (
 def add_occupancy_metrics(frame: pd.DataFrame) -> pd.DataFrame:
     """Add occupancy percentage, hour, weekday, and status features."""
     data = frame.copy()
+    data["timestamp"] = pd.to_datetime(
+        data["timestamp"], errors="coerce", utc=True
+    )
 
     data["occupancy_pct"] = (
         data["occupancy_count"]

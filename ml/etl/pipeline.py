@@ -1,15 +1,15 @@
 import os
 
-from extract import (
+from etl.extract import (
     fetch_bookings,
     save_raw_data
 )
 
-from transform import (
+from etl.transform import (
     transform_bookings
 )
 
-from aggregate import (
+from etl.aggregate import (
     aggregate_booking_data
 )
 
@@ -73,7 +73,10 @@ def run_pipeline():
         transformed_df
     )
 
-    \
+    os.makedirs(
+        os.path.dirname(AGGREGATED_DATA_PATH),
+        exist_ok=True,
+    )
 
     aggregated_df.to_csv(
         AGGREGATED_DATA_PATH,

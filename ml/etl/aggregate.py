@@ -16,11 +16,20 @@ def aggregate_booking_data(df):
         "is_weekend"
     ]
 
-    # Only use columns that actually exist
-    group_columns = [
-        col for col in group_columns
-        if col in df.columns
+    required_columns = group_columns + [
+        "booking_id",
+        "user_id",
+        "amount",
+        "duration_hours",
     ]
+    missing_columns = [
+        column for column in required_columns
+        if column not in df.columns
+    ]
+    if missing_columns:
+        raise ValueError(
+            f"Missing columns for booking aggregation: {missing_columns}"
+        )
 
     aggregated = (
         df

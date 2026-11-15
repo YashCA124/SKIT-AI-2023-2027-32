@@ -2,5 +2,6 @@ pandas
 numpy
 requests
 python-dotenv
+scikit-learn
 celery
 redis

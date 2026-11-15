@@ -1,0 +1,4 @@
+lot_id,latest_timestamp,recent_mean_occupancy_pct,previous_mean_occupancy_pct,change_percentage_points,trend_direction,recent_observations,previous_observations
+LOT-001,2025-02-02 23:00:00+00:00,33.75,35.0,-1.25,stable,24,24
+LOT-002,2025-02-02 23:00:00+00:00,37.92,38.18,-0.26,stable,24,24
+LOT-003,2025-02-02 23:00:00+00:00,39.58,40.97,-1.39,stable,24,24

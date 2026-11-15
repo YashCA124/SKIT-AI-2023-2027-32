@@ -1,0 +1,4 @@
+lot_id,mean_occupancy_pct,median_occupancy_pct,max_occupancy_pct,min_occupancy_pct,occupancy_std_pct,average_occupied_spaces,average_capacity,observations,first_observation,last_observation
+LOT-003,46.08,48.33,100.0,3.33,27.03,27.65,60.0,672,2025-01-06 00:00:00+00:00,2025-02-02 23:00:00+00:00
+LOT-002,42.72,45.0,90.0,2.5,24.95,34.17,80.0,672,2025-01-06 00:00:00+00:00,2025-02-02 23:00:00+00:00
+LOT-001,39.12,41.67,84.17,0.0,23.03,46.94,120.0,672,2025-01-06 00:00:00+00:00,2025-02-02 23:00:00+00:00

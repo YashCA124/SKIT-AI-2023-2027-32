@@ -1,0 +1,137 @@
+{
+    "generated_at": "2026-11-15T18:12:57.744673",
+    "data_quality": {
+        "overall_status": "PASSED",
+        "quality_score": 100.0,
+        "row_count": 1120,
+        "failed_checks": [],
+        "checks": {
+            "missing_values": {
+                "status": "passed",
+                "missing_by_column": {},
+                "missing_count": 0
+            },
+            "duplicates": {
+                "status": "passed",
+                "duplicate_count": 0
+            },
+            "booking_ids": {
+                "status": "passed",
+                "missing_booking_id_count": 0
+            },
+            "duration": {
+                "status": "passed",
+                "invalid_duration_count": 0
+            },
+            "revenue": {
+                "status": "passed",
+                "negative_revenue_count": 0
+            },
+            "timestamps": {
+                "status": "passed",
+                "invalid_start_time": 0,
+                "invalid_end_time": 0
+            },
+            "status": {
+                "status": "passed",
+                "invalid_statuses": []
+            },
+            "vehicle_type": {
+                "status": "passed",
+                "invalid_vehicle_types": []
+            }
+        }
+    },
+    "eda": {
+        "row_count": 1120,
+        "column_count": 18,
+        "columns": [
+            "booking_id",
+            "user_id",
+            "parking_lot_id",
+            "booking_time",
+            "start_time",
+            "end_time",
+            "amount",
+            "status",
+            "payment_status",
+            "vehicle_type",
+            "duration_hours",
+            "hour",
+            "day_of_week",
+            "day",
+            "month",
+            "year",
+            "is_weekend",
+            "is_peak_hour"
+        ],
+        "missing_values": {
+            "booking_id": 0,
+            "user_id": 0,
+            "parking_lot_id": 0,
+            "booking_time": 0,
+            "start_time": 0,
+            "end_time": 0,
+            "amount": 0,
+            "status": 0,
+            "payment_status": 0,
+            "vehicle_type": 0,
+            "duration_hours": 0,
+            "hour": 0,
+            "day_of_week": 0,
+            "day": 0,
+            "month": 0,
+            "year": 0,
+            "is_weekend": 0,
+            "is_peak_hour": 0
+        },
+        "unique_users": 179,
+        "unique_parking_lots": 3,
+        "revenue": {
+            "total": 106706.25,
+            "average": 95.2734375,
+            "minimum": 31.5,
+            "maximum": 189.0
+        },
+        "duration": {
+            "average": 2.475,
+            "minimum": 1.0,
+            "maximum": 4.0
+        },
+        "booking_by_hour": {
+            "0": 13,
+            "1": 9,
+            "2": 9,
+            "3": 10,
+            "4": 11,
+            "5": 12,
+            "6": 34,
+            "7": 76,
+            "8": 74,
+            "9": 77,
+            "10": 44,
+            "11": 47,
+            "12": 38,
+            "13": 41,
+            "14": 46,
+            "15": 56,
+            "16": 93,
+            "17": 100,
+            "18": 96,
+            "19": 86,
+            "20": 34,
+            "21": 34,
+            "22": 37,
+            "23": 43
+        },
+        "vehicle_distribution": {
+            "suv": 290,
+            "ev": 280,
+            "car": 279,
+            "bike": 271
+        },
+        "booking_status_distribution": {
+            "completed": 1120
+        }
+    }
+}

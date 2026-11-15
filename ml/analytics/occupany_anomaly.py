@@ -27,12 +27,35 @@ def validate_anomaly_input(frame: pd.DataFrame) -> None:
             f"Missing columns for anomaly detection: {missing}"
         )
 
+    timestamps = pd.to_datetime(frame["timestamp"], errors="coerce", utc=True)
+    occupancy = pd.to_numeric(frame["occupancy_count"], errors="coerce")
+    capacity = pd.to_numeric(frame["capacity"], errors="coerce")
+    invalid = (
+        timestamps.isna()
+        | occupancy.isna()
+        | capacity.isna()
+        | (capacity <= 0)
+        | (occupancy < 0)
+        | (occupancy > capacity)
+    )
+    if invalid.any():
+        raise ValueError(
+            f"Anomaly input contains {int(invalid.sum())} invalid occupancy rows."
+        )
+
 
 def calculate_occupancy_percentage(
     frame: pd.DataFrame,
 ) -> pd.DataFrame:
     """Calculate utilization percentage safely."""
     data = frame.copy()
+    data["timestamp"] = pd.to_datetime(
+        data["timestamp"], errors="coerce", utc=True
+    )
+    data["occupancy_count"] = pd.to_numeric(
+        data["occupancy_count"], errors="coerce"
+    )
+    data["capacity"] = pd.to_numeric(data["capacity"], errors="coerce")
 
     data["occupancy_pct"] = (
         data["occupancy_count"]
@@ -47,10 +70,11 @@ def calculate_rolling_statistics(
     window: int = 24,
     minimum_periods: int = 6,
 ) -> pd.DataFrame:
-    """Calculate historical rolling median and MAD per lot.
+    """Compare each lot-hour with earlier matching weekday/weekend records.
 
-    The current observation is shifted out before calculating the
-    reference statistics, avoiding comparison with itself.
+    Same-hour history avoids treating normal daily demand cycles as
+    anomalies; separating weekdays from weekends avoids flagging their
+    expected demand differences. The current observation is excluded.
     """
     if window < 3:
         raise ValueError("window must be at least 3.")
@@ -60,12 +84,16 @@ def calculate_rolling_statistics(
             "minimum_periods must be between 2 and window."
         )
 
+    validate_anomaly_input(frame)
     data = calculate_occupancy_percentage(frame)
     data = data.sort_values(
         ["lot_id", "timestamp"]
     ).reset_index(drop=True)
+    data["hour_of_day"] = data["timestamp"].dt.hour
+    data["is_weekend"] = data["timestamp"].dt.dayofweek.isin([5, 6])
 
-    grouped = data.groupby("lot_id")["occupancy_pct"]
+    group_columns = ["lot_id", "hour_of_day", "is_weekend"]
+    grouped = data.groupby(group_columns)["occupancy_pct"]
 
     data["rolling_median"] = grouped.transform(
         lambda values: values.shift(1).rolling(
@@ -88,7 +116,7 @@ def calculate_rolling_statistics(
         )
 
     data["rolling_mad"] = (
-        data.groupby("lot_id")["occupancy_pct"]
+        data.groupby(group_columns)["occupancy_pct"]
         .transform(rolling_mad)
     )
 
@@ -104,8 +132,8 @@ def detect_occupancy_anomalies(
     """Flag unusually high or low occupancy observations.
 
     A robust modified z-score is calculated from the rolling median
-    and rolling MAD. If MAD is zero, a small tolerance is used so that
-    a completely constant historical series can still flag a jump.
+    and rolling MAD. A minimum scale prevents small, rounded occupancy
+    changes from looking anomalous when historical MAD is zero.
     """
     validate_anomaly_input(frame)
 
@@ -122,7 +150,8 @@ def detect_occupancy_anomalies(
     difference = data["occupancy_pct"] - data["rolling_median"]
 
     denominator = 1.4826 * mad
-    denominator = denominator.mask(denominator == 0, 1.0)
+    # Whole-space rounding can otherwise make small changes appear extreme.
+    denominator = denominator.clip(lower=3.5)
 
     data["robust_z_score"] = difference / denominator
 

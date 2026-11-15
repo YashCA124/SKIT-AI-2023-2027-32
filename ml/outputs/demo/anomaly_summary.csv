@@ -1,0 +1,3 @@
+lot_id,total_anomalies,high_severity,medium_severity,unexpected_spikes,unexpected_drops
+LOT-001,1,1,0,0,1
+LOT-003,1,1,0,1,0

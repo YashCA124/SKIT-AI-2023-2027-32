@@ -1,0 +1,4 @@
+lot_id,timestamp,forecast_timestamp,capacity,occupancy_count,predicted_occupancy,predicted_occupancy_pct
+LOT-002,2025-02-02 23:00:00+00:00,2025-02-03 00:00:00+00:00,80,13,8,10.0
+LOT-001,2025-02-02 23:00:00+00:00,2025-02-03 00:00:00+00:00,120,18,12,10.0
+LOT-003,2025-02-02 23:00:00+00:00,2025-02-03 00:00:00+00:00,60,9,5,8.33

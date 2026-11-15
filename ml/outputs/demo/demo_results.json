@@ -1,0 +1,260 @@
+{
+  "status": "success",
+  "booking_data": {
+    "source": "C:\\Users\\hp\\Final-Year-Project\\ml\\data\\demo\\demo_bookings.csv",
+    "raw_rows": 1120,
+    "transformed_rows": 1120,
+    "aggregated_rows": 807,
+    "schema_status": "passed",
+    "timestamp_status": "passed",
+    "quality_status": "PASSED",
+    "quality_score": 100.0,
+    "quality_report": "C:\\Users\\hp\\Final-Year-Project\\ml\\outputs\\demo\\quality\\quality_report_20261115_181257.json",
+    "analytics": {
+      "status": "success",
+      "total_bookings": 1120,
+      "total_revenue": 106706.25,
+      "average_booking_value": 95.27,
+      "average_duration": 2.48,
+      "peak_hours": [
+        {
+          "hour": 17,
+          "booking_count": 100
+        },
+        {
+          "hour": 18,
+          "booking_count": 96
+        },
+        {
+          "hour": 16,
+          "booking_count": 93
+        },
+        {
+          "hour": 19,
+          "booking_count": 86
+        },
+        {
+          "hour": 9,
+          "booking_count": 77
+        }
+      ],
+      "parking_lots": [
+        {
+          "parking_lot_id": "LOT-001",
+          "bookings": 374,
+          "revenue": 43611.75,
+          "average_duration": 2.47
+        },
+        {
+          "parking_lot_id": "LOT-002",
+          "bookings": 373,
+          "revenue": 33957.0,
+          "average_duration": 2.48
+        },
+        {
+          "parking_lot_id": "LOT-003",
+          "bookings": 373,
+          "revenue": 29137.5,
+          "average_duration": 2.48
+        }
+      ]
+    }
+  },
+  "occupancy_data": {
+    "source": "C:\\Users\\hp\\Final-Year-Project\\ml\\data\\demo\\demo_occupancy.csv",
+    "validation": {
+      "source": "C:\\Users\\hp\\Final-Year-Project\\ml\\data\\demo\\demo_occupancy.csv",
+      "rows_read": 2016,
+      "rows_kept": 2016,
+      "duplicates_removed": 0,
+      "invalid_rows_removed": 0,
+      "optional_columns_missing": [],
+      "warnings": []
+    },
+    "trend_summary": [
+      {
+        "lot_id": "LOT-003",
+        "mean_occupancy_pct": 46.08,
+        "median_occupancy_pct": 48.33,
+        "max_occupancy_pct": 100.0,
+        "min_occupancy_pct": 3.33,
+        "occupancy_std_pct": 27.03,
+        "average_occupied_spaces": 27.65,
+        "average_capacity": 60.0,
+        "observations": 672,
+        "first_observation": "2025-01-06T00:00:00+00:00",
+        "last_observation": "2025-02-02T23:00:00+00:00"
+      },
+      {
+        "lot_id": "LOT-002",
+        "mean_occupancy_pct": 42.72,
+        "median_occupancy_pct": 45.0,
+        "max_occupancy_pct": 90.0,
+        "min_occupancy_pct": 2.5,
+        "occupancy_std_pct": 24.95,
+        "average_occupied_spaces": 34.17,
+        "average_capacity": 80.0,
+        "observations": 672,
+        "first_observation": "2025-01-06T00:00:00+00:00",
+        "last_observation": "2025-02-02T23:00:00+00:00"
+      },
+      {
+        "lot_id": "LOT-001",
+        "mean_occupancy_pct": 39.12,
+        "median_occupancy_pct": 41.67,
+        "max_occupancy_pct": 84.17,
+        "min_occupancy_pct": 0.0,
+        "occupancy_std_pct": 23.03,
+        "average_occupied_spaces": 46.94,
+        "average_capacity": 120.0,
+        "observations": 672,
+        "first_observation": "2025-01-06T00:00:00+00:00",
+        "last_observation": "2025-02-02T23:00:00+00:00"
+      }
+    ],
+    "recent_trends": [
+      {
+        "lot_id": "LOT-001",
+        "latest_timestamp": "2025-02-02T23:00:00+00:00",
+        "recent_mean_occupancy_pct": 33.75,
+        "previous_mean_occupancy_pct": 35.0,
+        "change_percentage_points": -1.25,
+        "trend_direction": "stable",
+        "recent_observations": 24,
+        "previous_observations": 24
+      },
+      {
+        "lot_id": "LOT-002",
+        "latest_timestamp": "2025-02-02T23:00:00+00:00",
+        "recent_mean_occupancy_pct": 37.92,
+        "previous_mean_occupancy_pct": 38.18,
+        "change_percentage_points": -0.26,
+        "trend_direction": "stable",
+        "recent_observations": 24,
+        "previous_observations": 24
+      },
+      {
+        "lot_id": "LOT-003",
+        "latest_timestamp": "2025-02-02T23:00:00+00:00",
+        "recent_mean_occupancy_pct": 39.58,
+        "previous_mean_occupancy_pct": 40.97,
+        "change_percentage_points": -1.39,
+        "trend_direction": "stable",
+        "recent_observations": 24,
+        "previous_observations": 24
+      }
+    ],
+    "model": {
+      "selected_model": "random_forest",
+      "selected_metrics": {
+        "model_name": "random_forest",
+        "mae": 2.2857,
+        "rmse": 4.6249,
+        "r2": 0.961,
+        "training_rows": 1548,
+        "testing_rows": 390
+      },
+      "baseline_metrics": {
+        "model_name": "dummy_mean_baseline",
+        "mae": 18.6953,
+        "rmse": 23.44,
+        "r2": -0.0012,
+        "training_rows": 1548,
+        "testing_rows": 390
+      },
+      "random_forest_metrics": {
+        "model_name": "random_forest",
+        "mae": 2.2857,
+        "rmse": 4.6249,
+        "r2": 0.961,
+        "training_rows": 1548,
+        "testing_rows": 390
+      },
+      "feature_columns": [
+        "hour_sin",
+        "hour_cos",
+        "day_sin",
+        "day_cos",
+        "is_weekend",
+        "occupancy_pct",
+        "occupancy_lag_1",
+        "occupancy_lag_2",
+        "occupancy_lag_3",
+        "occupancy_lag_24",
+        "occupancy_rolling_mean_3",
+        "occupancy_rolling_mean_6",
+        "occupancy_rolling_mean_24"
+      ],
+      "forecast_horizon_hours": 1,
+      "training_rows": 1548,
+      "testing_rows": 390,
+      "forecast_model_training_rows": 1941,
+      "training_last_target_timestamp": "2025-01-28T12:00:00+00:00",
+      "testing_first_timestamp": "2025-01-28T13:00:00+00:00",
+      "evaluated_at_utc": "2026-11-15T12:42:58.508941+00:00",
+      "note": "Metrics are a chronological holdout estimate. Validate on real data before using predictions for operational decisions."
+    },
+    "forecast": [
+      {
+        "lot_id": "LOT-002",
+        "timestamp": "2025-02-02T23:00:00+00:00",
+        "forecast_timestamp": "2025-02-03T00:00:00+00:00",
+        "capacity": 80,
+        "occupancy_count": 13,
+        "predicted_occupancy": 8,
+        "predicted_occupancy_pct": 10.0
+      },
+      {
+        "lot_id": "LOT-001",
+        "timestamp": "2025-02-02T23:00:00+00:00",
+        "forecast_timestamp": "2025-02-03T00:00:00+00:00",
+        "capacity": 120,
+        "occupancy_count": 18,
+        "predicted_occupancy": 12,
+        "predicted_occupancy_pct": 10.0
+      },
+      {
+        "lot_id": "LOT-003",
+        "timestamp": "2025-02-02T23:00:00+00:00",
+        "forecast_timestamp": "2025-02-03T00:00:00+00:00",
+        "capacity": 60,
+        "occupancy_count": 9,
+        "predicted_occupancy": 5,
+        "predicted_occupancy_pct": 8.33
+      }
+    ],
+    "anomaly_records": 2,
+    "anomaly_summary": [
+      {
+        "lot_id": "LOT-001",
+        "total_anomalies": 1,
+        "high_severity": 1,
+        "medium_severity": 0,
+        "unexpected_spikes": 0,
+        "unexpected_drops": 1
+      },
+      {
+        "lot_id": "LOT-003",
+        "total_anomalies": 1,
+        "high_severity": 1,
+        "medium_severity": 0,
+        "unexpected_spikes": 1,
+        "unexpected_drops": 0
+      }
+    ],
+    "anomaly_insights": [
+      "The analysis detected 2 unusual occupancy observations.",
+      "LOT-001 has the highest anomaly count (1).",
+      "2 observations were classified as high severity."
+    ],
+    "peak_hour_insights": {
+      "insights": [
+        "The busiest average clock hour is 17:00, with mean occupancy of 82.0%.",
+        "No clock hour averages at least 85% occupancy.",
+        "The busiest average weekday is Tuesday, with mean occupancy of 45.0%."
+      ],
+      "interpretation": "These are historical patterns, not a guarantee of future demand."
+    }
+  },
+  "outputs_directory": "C:\\Users\\hp\\Final-Year-Project\\ml\\outputs\\demo"
+}

@@ -8,10 +8,16 @@ def validate_timestamps(df):
         "errors": []
     }
 
-    if "start_time" not in df.columns:
-        return result
-
-    if "end_time" not in df.columns:
+    missing_columns = [
+        column for column in ("start_time", "end_time")
+        if column not in df.columns
+    ]
+    if missing_columns:
+        result["status"] = "failed"
+        result["errors"].extend(
+            {"type": f"missing_{column}", "count": 1}
+            for column in missing_columns
+        )
         return result
 
     start = pd.to_datetime(

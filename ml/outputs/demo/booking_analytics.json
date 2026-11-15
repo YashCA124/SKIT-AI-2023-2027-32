@@ -1,0 +1,49 @@
+{
+  "status": "success",
+  "total_bookings": 1120,
+  "total_revenue": 106706.25,
+  "average_booking_value": 95.27,
+  "average_duration": 2.48,
+  "peak_hours": [
+    {
+      "hour": 17,
+      "booking_count": 100
+    },
+    {
+      "hour": 18,
+      "booking_count": 96
+    },
+    {
+      "hour": 16,
+      "booking_count": 93
+    },
+    {
+      "hour": 19,
+      "booking_count": 86
+    },
+    {
+      "hour": 9,
+      "booking_count": 77
+    }
+  ],
+  "parking_lots": [
+    {
+      "parking_lot_id": "LOT-001",
+      "bookings": 374,
+      "revenue": 43611.75,
+      "average_duration": 2.47
+    },
+    {
+      "parking_lot_id": "LOT-002",
+      "bookings": 373,
+      "revenue": 33957.0,
+      "average_duration": 2.48
+    },
+    {
+      "parking_lot_id": "LOT-003",
+      "bookings": 373,
+      "revenue": 29137.5,
+      "average_duration": 2.48
+    }
+  ]
+}

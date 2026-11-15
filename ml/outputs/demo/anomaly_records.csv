@@ -1,0 +1,3 @@
+lot_id,timestamp,occupancy_count,capacity,occupancy_pct,rolling_median,rolling_mad,robust_z_score,anomaly_type,anomaly_severity
+LOT-001,2025-01-30 14:00:00+00:00,0,120,0.0,52.083333333333336,,-14.880952380952381,unexpected_drop,high
+LOT-003,2025-01-23 14:00:00+00:00,60,60,100.0,63.33333333333333,,10.476190476190478,unexpected_spike,high

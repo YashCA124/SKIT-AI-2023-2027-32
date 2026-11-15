@@ -6,11 +6,12 @@ from datetime import datetime
 
 def save_validation_report(
     quality_report,
-    eda_report
+    eda_report,
+    output_directory="outputs/quality",
 ):
 
     os.makedirs(
-        "outputs/quality",
+        output_directory,
         exist_ok=True
     )
 
@@ -30,9 +31,9 @@ def save_validation_report(
             eda_report
     }
 
-    path = (
-        "outputs/quality/"
-        f"quality_report_{timestamp}.json"
+    path = os.path.join(
+        output_directory,
+        f"quality_report_{timestamp}.json",
     )
 
     with open(

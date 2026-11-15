@@ -97,6 +97,10 @@ def run_analytics():
         )
     )
 
+    os.makedirs(
+        os.path.dirname(AGGREGATED_DATA_PATH),
+        exist_ok=True,
+    )
     aggregated_df.to_csv(
         AGGREGATED_DATA_PATH,
         index=False
@@ -110,24 +114,6 @@ def run_analytics():
         transformed_df
     )
 
-
-    if quality_report["overall_status"] == "FAILED":
-
-        print(
-        "WARNING: Data quality checks failed."
-        )
-
-        print(
-        "Failed checks:",
-        quality_report["failed_checks"]
-        )
-
-    
-
-    # -----------------------------------------
-    # 4. DATA QUALITY VALIDATION
-    # -----------------------------------------
-
     print(
         "Running data quality checks..."
     )
@@ -135,6 +121,10 @@ def run_analytics():
     quality_report = run_quality_checks(
         transformed_df
     )
+
+    if quality_report["overall_status"] == "FAILED":
+        print("WARNING: Data quality checks failed.")
+        print("Failed checks:", quality_report["failed_checks"])
 
     # -----------------------------------------
     # 5. EDA MONITORING

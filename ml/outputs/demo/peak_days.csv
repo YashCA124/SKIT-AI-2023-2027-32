@@ -1,0 +1,8 @@
+day_of_week,day_name,mean_occupancy_pct,median_occupancy_pct,observations,high_occupancy_share
+1,Tuesday,45.04,47.5,288,7.64
+0,Monday,44.96,48.33,288,8.33
+2,Wednesday,44.82,47.08,288,7.64
+4,Friday,44.76,46.67,288,7.99
+3,Thursday,44.67,46.46,288,8.68
+5,Saturday,37.14,40.0,288,0.0
+6,Sunday,37.08,39.58,288,1.39
