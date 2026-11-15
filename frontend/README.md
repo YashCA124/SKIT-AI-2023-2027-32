@@ -124,12 +124,11 @@ reservation, payment, or management API requests and is not included in
 production routes or bundles. Real sign-in remains API-backed. Confirm before
 exiting the demo or signing out.
 
-`Backend/main.py` currently mounts auth, token, health, and readiness routers.
-Dashboard source files exist, but the active application does not mount those
-routers. The current API also has no payment endpoint or configured payment
-provider. Therefore parking search, bookings, merchant management,
-administrator management, and payments cannot provide live data in the
-current configuration.
+`Backend/main.py` mounts auth, token, health/readiness, and parking API
+routers. Live driver, merchant, and administrator operations are exposed under
+`/api`, including administrator controls for merchant access and parking lots.
+The payment endpoint is a development/demo simulation only; there is no
+configured payment provider and no real payment is collected.
 
 ### Service status
 
@@ -226,6 +225,19 @@ JSON unless noted otherwise. Authenticated requests use an
 | `POST /tokenauth/refresh` | Exchange a refresh token for an access token | Renews an expired access token |
 | `GET /health` | Read API health/service information | Populates the health section |
 | `GET /ready` | Read API readiness/database configuration | Populates the readiness section |
+| `GET /api/account` | Read the signed-in account | Shows account details in the workspace |
+| `GET /api/parking/lots` | Search active parking locations | Shows live parking options to drivers |
+| `GET /api/bookings`, `POST /api/bookings` | View bookings and reserve a space | Updates the driver's live bookings |
+| `POST /api/bookings/{booking_id}/end` | End an active booking | Releases the space and creates a pending demo payment |
+| `GET`, `POST /api/merchant/lots` | View and create merchant locations | Manages locations owned by the signed-in merchant |
+| `PATCH /api/merchant/lots/{lot_id}` | Update a merchant lot's rate or availability | Updates the merchant's own location |
+| `GET /api/admin/users` | Review driver and merchant accounts | Displays account roles in admin user management |
+| `PATCH /api/admin/users/{user_id}/role` | Grant or revoke merchant access | Changes the selected account between driver and merchant |
+| `DELETE /api/admin/users/{user_id}` | Delete an eligible merchant account | Refuses deletion while the merchant owns lots or has booking history |
+| `GET /api/admin/parking-lots` | Review all parking locations | Displays ownership, availability, and space counts |
+| `PATCH /api/admin/parking-lots/{lot_id}/details` | Edit lot details or transfer ownership to another merchant | Saves the administrator's changes |
+| `PATCH /api/admin/parking-lots/{lot_id}` | Pause or reactivate a lot | Changes listing availability |
+| `DELETE /api/admin/parking-lots/{lot_id}` | Delete a parking location | Refuses deletion when the location has booking history |
 
 The frontend expects the login response to contain `access_token`,
 `refresh_token`, and a `user` with `id`, `name`, and `role`. The registration
@@ -374,10 +386,12 @@ the auth and account columns.
 
 - Sign-in, registration, session verification, logout, and service status
   require the FastAPI backend.
-- Parking, booking, merchant/admin management, and payment views are
-  unavailable in live sessions because their routes are not mounted/provided
-  by the current API. Development preview pages use explicitly fictional
-  sample data and simulated actions only; they never represent live records.
+- Live parking search, booking, merchant lot management, and administrator
+  account/location management require the FastAPI backend and database.
+- Payments are not processed; the payment simulation is restricted to
+  development/demo environments. Development preview pages use explicitly
+  fictional sample data and simulated actions only; they never represent live
+  records.
 - There is no Google sign-in or other third-party identity flow.
 - The frontend uses explicit React Router paths. Protected paths restore a
   valid tab session on reload and redirect to sign-in when there is no session.
@@ -397,7 +411,7 @@ Run these commands from `frontend/`:
 ## Explaining the frontend in a presentation
 
 > The Parkwise frontend is built with React and Vite. It provides API-backed
-> user/admin sign-in, user registration, session handling, and a live account
-> page. The currently mounted API does not expose the role dashboard or
-> payment routes, so those features are reported as unavailable rather than
-> represented with fabricated activity.
+> user/admin sign-in, user registration, session handling, and live driver,
+> merchant, and administrator workspaces. Administrators can manage merchant
+> access and parking locations, while payment behavior is only simulated in
+> development/demo environments.

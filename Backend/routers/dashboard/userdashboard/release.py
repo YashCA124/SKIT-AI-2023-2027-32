@@ -5,6 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_role
 from core.redis_client import redis_client
 # from background_tasks import (
@@ -20,9 +21,9 @@ from schemas import AllIDSchema, ReleaseResponse
 
 router = APIRouter(prefix="/booking", tags=["Booking Release"])
 
-@router.post("/release", response_model=ReleaseResponse)
+@router.post("/release")
 def release_spot(
-    data: AllIDSchema,
+    data: dict = load_body(AllIDSchema),
     current_user: User = Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db)
 ):
@@ -102,14 +103,16 @@ def release_spot(
         # check_and_block_lot.delay(lot.id)
         # check_and_delete_lot.delay(lot.id)
 
-        return {
-            "message": "Booking successfully completed",
-            "booking_id": curr_booking.id,
-            "total_cost": round(total_cost, 2),
-            "currency": booking_currency,
-            "exchange_rate": round(exchange_rate, 4),
-            "total_time_in_hours": total_hour
-        }
+        return ReleaseResponse().dump(
+            {
+                "message": "Booking successfully completed",
+                "booking_id": curr_booking.id,
+                "total_cost": round(total_cost, 2),
+                "currency": booking_currency,
+                "exchange_rate": round(exchange_rate, 4),
+                "total_time_in_hours": total_hour,
+            }
+        )
 
     except HTTPException:
         db.rollback()

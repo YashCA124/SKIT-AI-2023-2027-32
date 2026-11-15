@@ -4,9 +4,9 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from geopy.geocoders import Nominatim
-from pydantic import BaseModel, ConfigDict
 
 from core.db import get_db                    
+from schemas._common import load_body
 from models import UserType, ParkingLot, User
 from core.role_check import require_role
 from schemas import LotCreate, build_lot 
@@ -23,7 +23,7 @@ router = APIRouter()
     summary="Create a new parking lot",
 )
 def create_lot(
-    payload: LotCreate,
+    payload: dict = load_body(LotCreate),
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role(UserType.PARKING_MERCHANT)),
 ):

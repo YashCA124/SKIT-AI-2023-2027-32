@@ -29,6 +29,7 @@ from routers.parking_api import (
     simulate_demo_payment,
 )
 from schemas.parking import BookingCreate, DemoPaymentSimulation, LotCreate
+from schemas._common import load_payload
 
 
 def parking_objects(spot_status=BookingStatus.SPOT_AVAILABLE):
@@ -84,7 +85,7 @@ class ParkingApiTests(unittest.TestCase):
         db.refresh.side_effect = lambda booking: setattr(booking, "spot", spot)
 
         result = create_booking(
-            BookingCreate(spot_id=spot.id),
+            load_payload(BookingCreate, {"spot_id": spot.id}),
             {"id": 17, "role": UserType.PARKING_USER.value},
             db,
         )
@@ -103,7 +104,7 @@ class ParkingApiTests(unittest.TestCase):
 
         with self.assertRaises(HTTPException) as raised:
             create_booking(
-                BookingCreate(spot_id=spot.id),
+                load_payload(BookingCreate, {"spot_id": spot.id}),
                 {"id": 17, "role": UserType.PARKING_USER.value},
                 db,
             )
@@ -152,7 +153,7 @@ class ParkingApiTests(unittest.TestCase):
 
         result = simulate_demo_payment(
             31,
-            DemoPaymentSimulation(outcome="SUCCESS"),
+            load_payload(DemoPaymentSimulation, {"outcome": "SUCCESS"}),
             {"id": 17, "role": UserType.PARKING_USER.value},
             db,
         )
@@ -175,7 +176,7 @@ class ParkingApiTests(unittest.TestCase):
 
         result = simulate_demo_payment(
             31,
-            DemoPaymentSimulation(outcome="FAILED"),
+            load_payload(DemoPaymentSimulation, {"outcome": "FAILED"}),
             {"id": 17, "role": UserType.PARKING_USER.value},
             db,
         )
@@ -189,7 +190,7 @@ class ParkingApiTests(unittest.TestCase):
             with self.assertRaises(HTTPException) as raised:
                 simulate_demo_payment(
                     31,
-                    DemoPaymentSimulation(outcome="SUCCESS"),
+                    load_payload(DemoPaymentSimulation, {"outcome": "SUCCESS"}),
                     {"id": 17, "role": UserType.PARKING_USER.value},
                     MagicMock(),
                 )
@@ -197,20 +198,27 @@ class ParkingApiTests(unittest.TestCase):
         self.assertEqual(raised.exception.status_code, 503)
 
     def test_lot_contract_rejects_duplicate_floor_numbers(self):
-        with self.assertRaises(ValueError):
-            LotCreate(
-                location_name="Test Garage",
-                price=20,
-                currency="INR",
-                country="IN",
-                city="Jaipur",
-                state="Rajasthan",
-                address="1 Test Road",
-                pincode="302001",
-                latitude=26.9,
-                longitude=75.8,
-                floors=[{"floor_id": 0, "total_spots": 3}, {"floor_id": 0, "total_spots": 2}],
+        with self.assertRaises(HTTPException) as raised:
+            load_payload(
+                LotCreate,
+                {
+                    "location_name": "Test Garage",
+                    "price": 20,
+                    "currency": "INR",
+                    "country": "IN",
+                    "city": "Jaipur",
+                    "state": "Rajasthan",
+                    "address": "1 Test Road",
+                    "pincode": "302001",
+                    "latitude": 26.9,
+                    "longitude": 75.8,
+                    "floors": [
+                        {"floor_id": 0, "total_spots": 3},
+                        {"floor_id": 0, "total_spots": 2},
+                    ],
+                },
             )
+        self.assertEqual(raised.exception.status_code, 422)
 
 
 if __name__ == "__main__":

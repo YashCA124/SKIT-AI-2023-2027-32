@@ -22,7 +22,9 @@ from models import (
     User,
     UserType,
 )
+from schemas._common import load_body
 from schemas.parking import (
+    AdminLotUpdate,
     BookingCreate,
     DemoPaymentSimulation,
     LotCreate,
@@ -219,7 +221,7 @@ def search_parking_lots(
 
 @router.post("/bookings", status_code=status.HTTP_201_CREATED)
 def create_booking(
-    payload: BookingCreate,
+    payload: dict = load_body(BookingCreate),
     principal: dict = Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db),
 ):
@@ -318,7 +320,7 @@ def end_booking(
 @router.post("/payments/{payment_id}/simulate")
 def simulate_demo_payment(
     payment_id: int,
-    payload: DemoPaymentSimulation,
+    payload: dict = load_body(DemoPaymentSimulation),
     principal: dict = Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db),
 ):
@@ -374,7 +376,7 @@ def get_merchant_lots(
 
 @router.post("/merchant/lots", status_code=status.HTTP_201_CREATED)
 def create_merchant_lot(
-    payload: LotCreate,
+    payload: dict = load_body(LotCreate),
     principal: dict = Depends(require_role(UserType.PARKING_MERCHANT)),
     db: Session = Depends(get_db),
 ):
@@ -417,7 +419,7 @@ def create_merchant_lot(
 @router.patch("/merchant/lots/{lot_id}")
 def update_merchant_lot(
     lot_id: int,
-    payload: LotUpdate,
+    payload: dict = load_body(LotUpdate),
     principal: dict = Depends(require_role(UserType.PARKING_MERCHANT)),
     db: Session = Depends(get_db),
 ):
@@ -461,16 +463,49 @@ def list_users(
 @router.patch("/admin/users/{user_id}/role")
 def update_user_role(
     user_id: int,
-    payload: UserRoleUpdate,
+    payload: dict = load_body(UserRoleUpdate),
     _principal: dict = Depends(require_role(UserType.ADMIN)),
     db: Session = Depends(get_db),
 ):
     user = db.get(User, user_id)
     if user is None:
         raise HTTPException(status_code=404, detail="User account was not found")
-    user.user_type = UserType.PARKING_MERCHANT
+    user.user_type = UserType(payload.role)
     db.commit()
     return {"id": user.id, "role": _role_value(user.user_type)}
+
+
+@router.delete("/admin/users/{user_id}")
+def delete_merchant(
+    user_id: int,
+    _principal: dict = Depends(require_role(UserType.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    user = db.get(User, user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User account was not found")
+    if _role_value(user.user_type) != UserType.PARKING_MERCHANT.value:
+        raise HTTPException(status_code=409, detail="Only merchant accounts can be deleted")
+    if db.query(ParkingLot.id).filter_by(user_id=user.id).first():
+        raise HTTPException(
+            status_code=409,
+            detail="Transfer or delete this merchant's parking lots before deleting the account",
+        )
+    if db.query(ParkingBooking.id).filter_by(user_id=user.id).first():
+        raise HTTPException(
+            status_code=409,
+            detail="This account has booking history and cannot be permanently deleted",
+        )
+    try:
+        db.delete(user)
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="This merchant account has linked parking or booking records and cannot be deleted",
+        ) from exc
+    return {"id": user.id, "message": "Merchant account deleted"}
 
 
 @router.get("/admin/parking-lots")
@@ -482,10 +517,53 @@ def list_all_lots(
     return {"parking_lots": [_lot_payload(lot, include_owner=True) for lot in lots]}
 
 
+@router.patch("/admin/parking-lots/{lot_id}/details")
+def update_admin_lot(
+    lot_id: int,
+    payload: dict = load_body(AdminLotUpdate),
+    _principal: dict = Depends(require_role(UserType.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    lot = db.get(ParkingLot, lot_id)
+    if lot is None:
+        raise HTTPException(status_code=404, detail="Parking location was not found")
+
+    owner = None
+    if payload.owner_id is not None and payload.owner_id != lot.user_id:
+        owner = db.get(User, payload.owner_id)
+        if owner is None:
+            raise HTTPException(status_code=404, detail="Merchant account was not found")
+        if _role_value(owner.user_type) != UserType.PARKING_MERCHANT.value:
+            raise HTTPException(
+                status_code=422, detail="Parking locations can only be assigned to merchants"
+            )
+
+    for field in (
+        "location_name",
+        "price",
+        "currency",
+        "country",
+        "city",
+        "state",
+        "address",
+        "pincode",
+    ):
+        value = getattr(payload, field)
+        if value is not None:
+            setattr(lot, field, value)
+
+    if owner is not None:
+        lot.owner = owner
+
+    db.commit()
+    db.refresh(lot)
+    return _lot_payload(lot, include_owner=True)
+
+
 @router.patch("/admin/parking-lots/{lot_id}")
 def update_admin_lot_status(
     lot_id: int,
-    payload: LotStatusUpdate,
+    payload: dict = load_body(LotStatusUpdate),
     _principal: dict = Depends(require_role(UserType.ADMIN)),
     db: Session = Depends(get_db),
 ):
@@ -495,3 +573,38 @@ def update_admin_lot_status(
     lot.available = AvailableStatus(payload.available)
     db.commit()
     return {"id": lot.id, "available": _role_value(lot.available)}
+
+
+@router.delete("/admin/parking-lots/{lot_id}")
+def delete_admin_lot(
+    lot_id: int,
+    _principal: dict = Depends(require_role(UserType.ADMIN)),
+    db: Session = Depends(get_db),
+):
+    lot = db.get(ParkingLot, lot_id)
+    if lot is None:
+        raise HTTPException(status_code=404, detail="Parking location was not found")
+
+    existing_booking = (
+        db.query(ParkingBooking.id)
+        .join(ParkingSpot, ParkingBooking.spot_id == ParkingSpot.id)
+        .join(Floor, ParkingSpot.floor_id == Floor.id)
+        .filter(Floor.parking_lot_id == lot_id)
+        .first()
+    )
+    if existing_booking:
+        raise HTTPException(
+            status_code=409,
+            detail="This parking location has booking history and cannot be permanently deleted",
+        )
+
+    try:
+        db.delete(lot)
+        db.commit()
+    except IntegrityError as exc:
+        db.rollback()
+        raise HTTPException(
+            status_code=409,
+            detail="This parking location has linked records and cannot be deleted",
+        ) from exc
+    return {"id": lot.id, "message": "Parking location deleted"}

@@ -1,35 +1,76 @@
-"""Shared helpers for the Pydantic schemas."""
-from decimal import Decimal
+from collections.abc import Mapping
 from enum import Enum
-from typing import Annotated, Any, Optional
+from types import SimpleNamespace
+from typing import Any
 
-from pydantic import BeforeValidator, ConfigDict, PlainSerializer
-
-# Marshmallow's `Decimal(as_string=True)` -> a JSON string such as "12.50".
-DecimalStr = Annotated[
-    Decimal,
-    PlainSerializer(lambda v: str(v), return_type=str, when_used="always"),
-]
+from fastapi import Body, Depends, HTTPException
+from marshmallow import Schema, ValidationError
 
 
-def _enum_name(value: Any) -> Any:
-    """Marshmallow `obj.status.name` equivalent: Enum member -> its name."""
+def _validation_details(errors: Any, path: tuple[Any, ...] = ()) -> list[dict[str, Any]]:
+    if isinstance(errors, dict):
+        details = []
+        for key, value in errors.items():
+            next_path = path if key == "_schema" else (*path, key)
+            details.extend(_validation_details(value, next_path))
+        return details
+    if isinstance(errors, list):
+        if all(isinstance(error, str) for error in errors):
+            return [
+                {
+                    "loc": ["body", *path],
+                    "msg": error,
+                    "type": "value_error",
+                }
+                for error in errors
+            ]
+        details = []
+        for index, value in enumerate(errors):
+            details.extend(_validation_details(value, (*path, index)))
+        return details
+    return [{"loc": ["body", *path], "msg": str(errors), "type": "value_error"}]
+
+
+def enum_name(value: Any) -> Any:
     return value.name if isinstance(value, Enum) else value
 
 
-# Enum member (or None) -> its `.name` string (or None).
-EnumName = Annotated[Optional[str], BeforeValidator(_enum_name)]
+def get_value(obj: Any, *names: str, default: Any = None) -> Any:
+    for name in names:
+        value = obj
+        try:
+            for part in name.split("."):
+                value = value[part] if isinstance(value, Mapping) else getattr(value, part)
+        except (AttributeError, KeyError, TypeError):
+            continue
+        if value is not None:
+            return value
+    return default
 
-# Base config for schemas that are built straight from SQLAlchemy objects.
-ORM_CONFIG = ConfigDict(from_attributes=True, populate_by_name=True)
+
+def _namespace(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return SimpleNamespace(**{key: _namespace(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return [_namespace(item) for item in value]
+    return value
 
 
-def dump(schema, obj, many: bool = False):
-    """Replacement for marshmallow's `Schema(many=...).dump(obj)`.
+def load_payload(schema_type: type[Schema], payload: dict) -> Any:
+    try:
+        return _namespace(schema_type().load(payload))
+    except ValidationError as exc:
+        raise HTTPException(
+            status_code=422, detail=_validation_details(exc.messages)
+        ) from exc
 
-    Returns plain JSON-safe data (Decimals as strings, enums as names), so the
-    result can go straight into `json.dumps` / the Redis cache.
-    """
-    if many:
-        return [schema.model_validate(o).model_dump(mode="json") for o in obj]
-    return schema.model_validate(obj).model_dump(mode="json")
+
+def load_body(schema_type: type[Schema]):
+    async def dependency(payload: dict = Body(...)) -> Any:
+        return load_payload(schema_type, payload)
+
+    return Depends(dependency)
+
+
+def dump(schema: Schema, obj: Any, many: bool = False) -> Any:
+    return schema.dump(obj, many=many)

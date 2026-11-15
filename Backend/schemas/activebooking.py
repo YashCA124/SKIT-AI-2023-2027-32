@@ -1,33 +1,29 @@
-from typing import Optional
+from marshmallow import Schema, fields
 
-from pydantic import AliasChoices, AliasPath, BaseModel, Field
-
-from ._common import ORM_CONFIG, DecimalStr
+from ._common import get_value
 
 
-class ActiveBooking(BaseModel):
+class ActiveBooking(Schema):
     """Output schema for an active ParkingBooking."""
 
-    model_config = ORM_CONFIG
+    user_id = fields.Integer()
+    full_spot_id = fields.Method("get_full_spot_id")
+    parking_timestamp = fields.Method("get_parking_timestamp")
+    parking_timezone = fields.String()
+    cost_per_unit = fields.Decimal(as_string=True)
+    lot_name = fields.Method("get_lot_name")
+    currency = fields.String()
+    exchange_rate = fields.Decimal(as_string=True)
+    base_currency = fields.Method("get_base_currency")
 
-    user_id: int
-    full_spot_id: Optional[str] = Field(
-        default=None,
-        validation_alias=AliasChoices(AliasPath("spot", "full_spot_id"), "full_spot_id"),
-    )
-    parking_timestamp: Optional[str] = Field(
-        default=None,
-        validation_alias=AliasChoices("get_local_parking_timestamp", "parking_timestamp"),
-    )
-    parking_timezone: str
-    cost_per_unit: DecimalStr
-    lot_name: Optional[str] = Field(
-        default=None,
-        validation_alias=AliasChoices("get_lot_name", "lot_name"),
-    )
-    currency: str
-    exchange_rate: DecimalStr
-    base_currency: Optional[str] = Field(
-        default=None,
-        validation_alias=AliasChoices("get_lot_currency", "base_currency"),
-    )
+    def get_full_spot_id(self, obj):
+        return get_value(obj, "spot.full_spot_id", "full_spot_id")
+
+    def get_parking_timestamp(self, obj):
+        return get_value(obj, "get_local_parking_timestamp", "parking_timestamp")
+
+    def get_lot_name(self, obj):
+        return get_value(obj, "get_lot_name", "lot_name")
+
+    def get_base_currency(self, obj):
+        return get_value(obj, "get_lot_currency", "base_currency")

@@ -1,36 +1,28 @@
-from typing import List
-
-from pydantic import BaseModel, field_validator
+from marshmallow import Schema, fields, validate
 
 
-class BookingSearchSchema(BaseModel):
-    radius_km: float = 5.0
-
-    @field_validator("radius_km")
-    @classmethod
-    def validate_radius(cls, value: float) -> float:
-        if value <= 0 or value > 50:
-            raise ValueError("radius_km must be > 0 and <= 50")
-        return value
+class BookingSearchSchema(Schema):
+    radius_km = fields.Float(
+        load_default=5.0, validate=validate.Range(min=0, min_inclusive=False, max=50)
+    )
 
 
-# --- response model for POST /user/booking/search --------------------------
-class NearbyLot(BaseModel):
-    lot_id: int
-    location_name: str
-    original_price: float
-    original_currency: str
-    converted_price: float
-    user_currency: str
-    exchange_rate: float
-    distance_km: float
-    eta_minutes: int
-    available_spots: int
-    address: str
+class NearbyLot(Schema):
+    lot_id = fields.Integer(required=True)
+    location_name = fields.String(required=True)
+    original_price = fields.Float(required=True)
+    original_currency = fields.String(required=True)
+    converted_price = fields.Float(required=True)
+    user_currency = fields.String(required=True)
+    exchange_rate = fields.Float(required=True)
+    distance_km = fields.Float(required=True)
+    eta_minutes = fields.Integer(required=True)
+    available_spots = fields.Integer(required=True)
+    address = fields.String(required=True)
 
 
-class BookingSearchResponse(BaseModel):
-    radius_km: float
-    total_results: int
-    parking_lots: List[NearbyLot]
-    conversion: bool
+class BookingSearchResponse(Schema):
+    radius_km = fields.Float(required=True)
+    total_results = fields.Integer(required=True)
+    parking_lots = fields.List(fields.Nested(NearbyLot), required=True)
+    conversion = fields.Boolean(required=True)

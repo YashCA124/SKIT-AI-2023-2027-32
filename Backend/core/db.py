@@ -1,11 +1,9 @@
-import os
-
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-if not DATABASE_URL:
-    raise RuntimeError("DATABASE_URL must be set before starting the backend.")
+from core.database_url import get_database_url
+
+DATABASE_URL = get_database_url()
 
 engine = create_engine(
     DATABASE_URL,

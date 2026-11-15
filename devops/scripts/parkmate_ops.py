@@ -146,7 +146,9 @@ def cmd_validate_env() -> int:
         return 1
 
     database_url = values.get("DATABASE_URL", "")
-    if not database_url.startswith(("postgresql://", "postgresql+psycopg2://")):
+    if not database_url.startswith(
+        ("postgres://", "postgresql://", "postgresql+psycopg2://")
+    ):
         print("DATABASE_URL must use a PostgreSQL URL")
         return 1
 

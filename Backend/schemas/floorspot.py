@@ -1,56 +1,50 @@
-from typing import List
-
-from pydantic import BaseModel, field_validator
+from marshmallow import Schema, ValidationError, fields, validates_schema
 
 
-class FloorSpotSchema(BaseModel):
-    floor_number: int
-    new_spots: int
+class FloorSpotSchema(Schema):
+    floor_number = fields.Integer(required=True)
+    new_spots = fields.Integer(required=True)
 
-    @field_validator("floor_number")
-    @classmethod
-    def validate_floor_number(cls, value: int) -> int:
-        if value < -10:
-            raise ValueError("Too many basement levels")
-        if value > 50:
-            raise ValueError("Too many floors")
-        return value
-
-    @field_validator("new_spots")
-    @classmethod
-    def validate_new_spots(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("New spots must be greater than 0")
-        if value > 1000:
-            raise ValueError("Too many spots to add at once")
-        return value
+    @validates_schema
+    def validate_values(self, data, **kwargs):
+        errors = {}
+        floor_number = data.get("floor_number")
+        if floor_number is not None and not -10 <= floor_number <= 50:
+            errors["floor_number"] = ["Too many basement levels" if floor_number < -10 else "Too many floors"]
+        new_spots = data.get("new_spots")
+        if new_spots is not None and new_spots <= 0:
+            errors["new_spots"] = ["New spots must be greater than 0"]
+        elif new_spots is not None and new_spots > 1000:
+            errors["new_spots"] = ["Too many spots to add at once"]
+        if errors:
+            raise ValidationError(errors)
 
 
-class AddSpotsSchema(BaseModel):
-    """Body of POST /merchant/addspots.
+class AddSpotsSchema(Schema):
+    """Request body for adding spaces to multiple floors."""
 
-    NOTE: reconstructed from routers/.../addspots.py (lot_id + floor list);
-    the original file for it was not provided. Replace if it differs.
-    """
+    lot_id = fields.Integer(required=True)
+    floor = fields.List(fields.Nested(FloorSpotSchema), required=True)
 
-    lot_id: int
-    floor: List[FloorSpotSchema]
-
-    @field_validator("lot_id")
-    @classmethod
-    def validate_lot_id(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("Only positive lot IDs allowed")
-        return value
-
-    @field_validator("floor")
-    @classmethod
-    def validate_floor_list(cls, value: List[FloorSpotSchema]) -> List[FloorSpotSchema]:
-        if not value:
-            raise ValueError("Floor data is required")
+    @validates_schema
+    def validate_floor_list(self, data, **kwargs):
+        errors = {}
+        if data.get("lot_id", 0) <= 0:
+            errors["lot_id"] = ["Only positive lot IDs allowed"]
+        floors = data.get("floor", [])
+        if not floors:
+            errors["floor"] = ["Floor data is required"]
         seen = set()
-        for f in value:
-            if f.floor_number in seen:
-                raise ValueError(f"Duplicate floor number {f.floor_number}")
-            seen.add(f.floor_number)
-        return value
+        duplicate_numbers = []
+        for floor in floors:
+            floor_number = floor["floor_number"]
+            if floor_number in seen:
+                duplicate_numbers.append(floor_number)
+            seen.add(floor_number)
+        if duplicate_numbers:
+            errors["floor"] = [
+                f"Duplicate floor number {floor_number}"
+                for floor_number in duplicate_numbers
+            ]
+        if errors:
+            raise ValidationError(errors)

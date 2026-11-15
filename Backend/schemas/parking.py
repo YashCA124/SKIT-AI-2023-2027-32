@@ -1,85 +1,164 @@
-from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from marshmallow import (
+    Schema,
+    ValidationError,
+    fields,
+    pre_load,
+    validate,
+    validates_schema,
+)
 
 
-class BookingCreate(BaseModel):
-    spot_id: int = Field(gt=0)
-    parking_timezone: str = "UTC"
+def _strip_strings(data):
+    if isinstance(data, dict):
+        return {
+            key: value.strip() if isinstance(value, str) else value
+            for key, value in data.items()
+        }
+    return data
 
-    @field_validator("parking_timezone")
-    @classmethod
-    def validate_timezone(cls, value: str) -> str:
+
+class BookingCreate(Schema):
+    spot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    parking_timezone = fields.String(load_default="UTC")
+
+    @pre_load
+    def strip_input(self, data, **kwargs):
+        return _strip_strings(data)
+
+    @validates_schema
+    def validate_timezone(self, data, **kwargs):
         try:
-            ZoneInfo(value)
+            ZoneInfo(data["parking_timezone"])
         except ZoneInfoNotFoundError as exc:
-            raise ValueError("Use a valid IANA time zone, such as Asia/Kolkata") from exc
-        return value
+            raise ValidationError(
+                {"parking_timezone": ["Use a valid IANA time zone, such as Asia/Kolkata"]}
+            ) from exc
 
 
-class DemoPaymentSimulation(BaseModel):
-    outcome: Literal["SUCCESS", "FAILED"]
+class DemoPaymentSimulation(Schema):
+    outcome = fields.String(required=True, validate=validate.OneOf(("SUCCESS", "FAILED")))
 
 
-class FloorCreate(BaseModel):
-    floor_id: int = Field(ge=-10, le=100)
-    total_spots: int = Field(gt=0, le=500)
+class FloorCreate(Schema):
+    floor_id = fields.Integer(required=True, validate=validate.Range(min=-10, max=100))
+    total_spots = fields.Integer(required=True, validate=validate.Range(min=1, max=500))
 
 
-class LotCreate(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
+class LotCreate(Schema):
+    location_name = fields.String(required=True, validate=validate.Length(min=2, max=120))
+    price = fields.Float(required=True, validate=validate.Range(min=0, max=100000))
+    currency = fields.String(required=True, validate=validate.Length(equal=3))
+    country = fields.String(required=True, validate=validate.Length(equal=2))
+    city = fields.String(required=True, validate=validate.Length(min=1, max=100))
+    state = fields.String(required=True, validate=validate.Length(min=1, max=100))
+    address = fields.String(required=True, validate=validate.Length(min=1, max=255))
+    pincode = fields.String(required=True, validate=validate.Length(min=1, max=20))
+    floors = fields.List(
+        fields.Nested(FloorCreate),
+        required=True,
+        validate=validate.Length(min=1, max=20),
+    )
+    latitude = fields.Float(required=True, validate=validate.Range(min=-90, max=90))
+    longitude = fields.Float(required=True, validate=validate.Range(min=-180, max=180))
 
-    location_name: str = Field(min_length=2, max_length=120)
-    price: float = Field(ge=0, le=100000)
-    currency: str = Field(min_length=3, max_length=3)
-    country: str = Field(min_length=2, max_length=2)
-    city: str = Field(min_length=1, max_length=100)
-    state: str = Field(min_length=1, max_length=100)
-    address: str = Field(min_length=1, max_length=255)
-    pincode: str = Field(min_length=1, max_length=20)
-    floors: list[FloorCreate] = Field(min_length=1, max_length=20)
-    latitude: float = Field(ge=-90, le=90)
-    longitude: float = Field(ge=-180, le=180)
+    @pre_load
+    def strip_input(self, data, **kwargs):
+        return _strip_strings(data)
 
-    @field_validator("country")
-    @classmethod
-    def validate_country_code(cls, value: str) -> str:
-        normalized = value.upper()
-        if len(normalized) != 2 or not normalized.isalpha():
-            raise ValueError("Country must be a two-letter ISO code")
-        return normalized
-
-    @field_validator("currency")
-    @classmethod
-    def validate_currency(cls, value: str) -> str:
-        normalized = value.upper()
-        if len(normalized) != 3 or not normalized.isalpha():
-            raise ValueError("Currency must be a three-letter ISO code")
-        return normalized
-
-    @model_validator(mode="after")
-    def validate_unique_floors(self):
-        floor_ids = [floor.floor_id for floor in self.floors]
+    @validates_schema
+    def validate_codes_and_floors(self, data, **kwargs):
+        errors = {}
+        country = data.get("country")
+        currency = data.get("currency")
+        if country and (len(country) != 2 or not country.isalpha()):
+            errors["country"] = ["Country must be a two-letter ISO code"]
+        if currency and (len(currency) != 3 or not currency.isalpha()):
+            errors["currency"] = ["Currency must be a three-letter ISO code"]
+        floors = data.get("floors", [])
+        floor_ids = [floor["floor_id"] for floor in floors]
         if len(floor_ids) != len(set(floor_ids)):
-            raise ValueError("Floor numbers must be unique within a lot")
-        return self
+            errors["floors"] = ["Floor numbers must be unique within a lot"]
+        if errors:
+            raise ValidationError(errors)
+        if country:
+            data["country"] = country.upper()
+        if currency:
+            data["currency"] = currency.upper()
 
 
-class LotUpdate(BaseModel):
-    price: float | None = Field(default=None, ge=0, le=100000)
-    available: Literal["ACTIVE", "BLOCK"] | None = None
+class LotUpdate(Schema):
+    price = fields.Float(
+        allow_none=True, load_default=None, validate=validate.Range(min=0, max=100000)
+    )
+    available = fields.String(
+        allow_none=True,
+        load_default=None,
+        validate=validate.OneOf(("ACTIVE", "BLOCK")),
+    )
 
-    @model_validator(mode="after")
-    def require_update(self):
-        if self.price is None and self.available is None:
-            raise ValueError("Provide a price or availability status to update")
-        return self
+    @validates_schema
+    def require_update(self, data, **kwargs):
+        if data.get("price") is None and data.get("available") is None:
+            raise ValidationError("Provide a price or availability status to update")
 
 
-class LotStatusUpdate(BaseModel):
-    available: Literal["ACTIVE", "BLOCK"]
+class LotStatusUpdate(Schema):
+    available = fields.String(
+        required=True, validate=validate.OneOf(("ACTIVE", "BLOCK"))
+    )
 
 
-class UserRoleUpdate(BaseModel):
-    role: Literal["M"]
+class AdminLotUpdate(Schema):
+    location_name = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(min=2, max=120)
+    )
+    price = fields.Float(
+        allow_none=True, load_default=None, validate=validate.Range(min=0, max=100000)
+    )
+    currency = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(equal=3)
+    )
+    country = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(equal=2)
+    )
+    city = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(min=1, max=100)
+    )
+    state = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(min=1, max=100)
+    )
+    address = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(min=1, max=255)
+    )
+    pincode = fields.String(
+        allow_none=True, load_default=None, validate=validate.Length(min=1, max=20)
+    )
+    owner_id = fields.Integer(
+        allow_none=True, load_default=None, validate=validate.Range(min=1)
+    )
+
+    @pre_load
+    def strip_input(self, data, **kwargs):
+        return _strip_strings(data)
+
+    @validates_schema
+    def require_update(self, data, **kwargs):
+        if not any(value is not None for value in data.values()):
+            raise ValidationError("Provide at least one parking-lot field to update")
+
+    @validates_schema
+    def normalize_codes(self, data, **kwargs):
+        for field_name in ("country", "currency"):
+            value = data.get(field_name)
+            if value and not value.isalpha():
+                raise ValidationError(
+                    {field_name: [f"{field_name.capitalize()} must contain letters only"]}
+                )
+            if value:
+                data[field_name] = value.upper()
+
+
+class UserRoleUpdate(Schema):
+    role = fields.String(required=True, validate=validate.OneOf(("U", "M")))

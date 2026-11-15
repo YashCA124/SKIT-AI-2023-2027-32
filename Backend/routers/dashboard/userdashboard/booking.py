@@ -6,6 +6,7 @@ from geoalchemy2.elements import WKTElement
 from forex_python.converter import CurrencyRates, RatesNotAvailableError
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_user_role
 from core.redis_client import redis_client
 from currency import currency
@@ -15,8 +16,10 @@ from models import (
     ParkingBooking, UserType, BookingStatus, AvailableStatus
 )
 from schemas import (
-    BookingSearchSchema, BookingSearchResponse,
-    BookingCreateSchema, BookingCreateResponse
+    BookingSearchSchema,
+    BookingSearchResponse,
+    BookingCreateSchema,
+    BookingCreateResponse,
 )
 
 router = APIRouter(prefix="/booking", tags=["Booking"])
@@ -49,9 +52,9 @@ def get_floor_available_spots(db: Session, floor_id: int) -> int:
     redis_client.setex(floor_key, 300, count)
     return count
 
-@router.post("/search", response_model=BookingSearchResponse)
+@router.post("/search")
 def search_nearby_parking(
-    data: BookingSearchSchema,
+    data: dict = load_body(BookingSearchSchema),
     current_user: User = Depends(
         require_user_role(UserType.PARKING_USER)
     ),
@@ -74,7 +77,7 @@ def search_nearby_parking(
 
     cached = redis_client.get(cache_key)
     if cached:
-        return json.loads(cached)
+        return BookingSearchResponse().dump(json.loads(cached))
 
     user_point = WKTElement(f"POINT({user_lng} {user_lat})", srid=4326)
     distance_expr = func.ST_DistanceSphere(
@@ -152,12 +155,12 @@ def search_nearby_parking(
     }
 
     redis_client.setex(cache_key, 30, json.dumps(response))
-    return response
+    return BookingSearchResponse().dump(response)
 
-@router.post("", response_model=BookingCreateResponse, status_code=status.HTTP_200_OK)
+@router.post("", status_code=status.HTTP_200_OK)
 def create_booking(
-    data: BookingCreateSchema,
-    current_user: User = Depends(require_role(UserType.PARKING_USER)),
+    data: dict = load_body(BookingCreateSchema),
+    current_user: User = Depends(require_user_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db)
 ):
     active_key = f"user:{current_user.id}:active_booking"
@@ -245,15 +248,17 @@ def create_booking(
         # )
         # send_email_task.delay(current_user.email, subject, body)
 
-        return {
-            "message": "Booking Successful",
-            "booking": {
-                "booking_id": reservation.id,
-                "spot": spot.full_spot_id,
-                "cost": round(reservation.cost_per_unit, 2),
-                "parking_timestamp": reservation.get_local_parking_timestamp
+        return BookingCreateResponse().dump(
+            {
+                "message": "Booking Successful",
+                "booking": {
+                    "booking_id": reservation.id,
+                    "spot": spot.full_spot_id,
+                    "cost": round(reservation.cost_per_unit, 2),
+                    "parking_timestamp": reservation.get_local_parking_timestamp,
+                },
             }
-        }
+        )
 
     except HTTPException:
         db.rollback()

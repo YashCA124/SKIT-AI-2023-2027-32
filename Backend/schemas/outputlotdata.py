@@ -1,38 +1,48 @@
-from typing import List, Optional
+from marshmallow import Schema, fields
 
-from pydantic import AliasChoices, BaseModel, Field
-
-from ._common import ORM_CONFIG, EnumName
+from ._common import enum_name, get_value
 from .outputuserdata import User
 
 
-class Spot(BaseModel):
-    model_config = ORM_CONFIG
+class Spot(Schema):
+    id = fields.Integer()
+    spot = fields.Method("get_spot")
+    status = fields.Method("get_status")
+    available = fields.Method("get_available")
 
-    id: int
-    spot: str = Field(validation_alias=AliasChoices("full_spot_id", "spot"))
-    status: EnumName = None
-    available: EnumName = None
+    def get_spot(self, obj):
+        return get_value(obj, "full_spot_id", "spot")
 
+    def get_status(self, obj):
+        return enum_name(get_value(obj, "status"))
 
-class Floor(BaseModel):
-    model_config = ORM_CONFIG
-
-    id: int
-    label: str
-    total_spot_count: int
-    floor_id: int
-    available: EnumName = None
-    spots: List[Spot] = []
+    def get_available(self, obj):
+        return enum_name(get_value(obj, "available"))
 
 
-class Lot(BaseModel):
-    model_config = ORM_CONFIG
+class Floor(Schema):
+    id = fields.Integer()
+    label = fields.String()
+    total_spot_count = fields.Integer()
+    floor_id = fields.Integer()
+    available = fields.Method("get_available")
+    spots = fields.Nested(Spot, many=True)
 
-    id: int
-    location_name: str
-    price: float
-    address: str = Field(validation_alias=AliasChoices("full_address", "address"))
-    available: EnumName = None
-    floors: List[Floor] = []
-    owner: Optional[User] = None
+    def get_available(self, obj):
+        return enum_name(get_value(obj, "available"))
+
+
+class Lot(Schema):
+    id = fields.Integer()
+    location_name = fields.String()
+    price = fields.Float()
+    address = fields.Method("get_address")
+    available = fields.Method("get_available")
+    floors = fields.Nested(Floor, many=True)
+    owner = fields.Nested(User, allow_none=True)
+
+    def get_address(self, obj):
+        return get_value(obj, "full_address", "address")
+
+    def get_available(self, obj):
+        return enum_name(get_value(obj, "available"))

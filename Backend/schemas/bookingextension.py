@@ -1,47 +1,24 @@
 from datetime import datetime
 
-from pydantic import BaseModel, field_validator
+from marshmallow import Schema, ValidationError, fields, validate
 
 
-class ExtendBookingSchema(BaseModel):
-    lot_id: int
-    floor_id: int
-    spot_id: int
-
-    new_leaving_timestamp: datetime
-
-    @field_validator("lot_id")
-    @classmethod
-    def validate_lot(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("Invalid lot_id")
-        return value
-
-    @field_validator("floor_id")
-    @classmethod
-    def validate_floor(cls, value: int) -> int:
-        if value < -10 or value > 50:
-            raise ValueError("Invalid floor_id")
-        return value
-
-    @field_validator("spot_id")
-    @classmethod
-    def validate_spot(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("Invalid spot_id")
-        return value
-
-    @field_validator("new_leaving_timestamp")
-    @classmethod
-    def validate_time(cls, value: datetime) -> datetime:
-        if value <= datetime.now(value.tzinfo):
-            raise ValueError("New leaving time must be in future")
-        return value
+def _must_be_future(value: datetime) -> None:
+    if value <= datetime.now(value.tzinfo):
+        raise ValidationError("New leaving time must be in future")
 
 
-# --- response model for POST /user/booking/extend --------------------------
-class ExtendBookingResponse(BaseModel):
-    message: str
-    booking_id: int
-    previous_leaving_timestamp: str
-    new_leaving_timestamp: str
+class ExtendBookingSchema(Schema):
+    lot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    floor_id = fields.Integer(required=True, validate=validate.Range(min=-10, max=50))
+    spot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    new_leaving_timestamp = fields.DateTime(
+        required=True, validate=_must_be_future
+    )
+
+
+class ExtendBookingResponse(Schema):
+    message = fields.String(required=True)
+    booking_id = fields.Integer(required=True)
+    previous_leaving_timestamp = fields.String(required=True)
+    new_leaving_timestamp = fields.String(required=True)

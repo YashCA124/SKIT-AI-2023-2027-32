@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_role
 # from background_tasks import send_email_task
 from models import (
@@ -13,9 +14,9 @@ from schemas import ExtendBookingSchema, ExtendBookingResponse
 
 router = APIRouter(prefix="/booking", tags=["Booking Extension"])
 
-@router.post("/extend", response_model=ExtendBookingResponse)
+@router.post("/extend")
 def extend_booking(
-    data: ExtendBookingSchema,
+    data: dict = load_body(ExtendBookingSchema),
     current_user: User = Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db)
 ):
@@ -81,12 +82,14 @@ def extend_booking(
         #     f"New leaving time: {data.new_leaving_timestamp.isoformat()}"
         # )
 
-        return {
-            "message": "Booking extended successfully",
-            "booking_id": booking.id,
-            "previous_leaving_timestamp": current_leaving.isoformat(),
-            "new_leaving_timestamp": data.new_leaving_timestamp.isoformat()
-        }
+        return ExtendBookingResponse().dump(
+            {
+                "message": "Booking extended successfully",
+                "booking_id": booking.id,
+                "previous_leaving_timestamp": current_leaving.isoformat(),
+                "new_leaving_timestamp": data.new_leaving_timestamp.isoformat(),
+            }
+        )
 
     except HTTPException:
         db.rollback()

@@ -1,9 +1,9 @@
 import json
+from dataclasses import dataclass
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session, selectinload
 
 from core.db import get_db
@@ -18,9 +18,9 @@ lots_schema = Lot(many=True)
 CACHE_TTL = 120
 
 
-class LotFilters(BaseModel):
-    """Replaces LotFilterSchema. Adjust constraints to match the old schema."""
-    country_code: str = Field(..., min_length=2, max_length=3)
+@dataclass
+class LotFilters:
+    country_code: str
     state: Optional[str] = None
     city: Optional[str] = None
 
