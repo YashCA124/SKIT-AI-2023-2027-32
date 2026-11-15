@@ -1,125 +1,113 @@
-
 import re
-from typing import List, Optional
+from typing import Any
 
 import pycountry
 from geoalchemy2.elements import WKTElement
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from marshmallow import (
+    Schema,
+    ValidationError,
+    fields,
+    pre_load,
+    validates_schema,
+)
 from sqlalchemy.orm import Session
 
-from models import ParkingLot, Floor, ParkingSpot, AvailableStatus, BookingStatus
 from filehandling import postal_patterns
-
-class FloorCreate(BaseModel):
-    floor_id: int
-    total_spots: int
-    available: str = "ACTIVE"
-
-class LotCreate(BaseModel):
-    model_config = ConfigDict(str_strip_whitespace=True)
-
-    location_name: str
-    price: float
-
-    country: str
-    city: str
-    state: str
-    address: str
-    pincode: str
-
-    available: str = "ACTIVE"
-
-    floors: List[FloorCreate]
-
-    latitude: float
-    longitude: float
-
-    @field_validator("price")
-    @classmethod
-    def validate_price(cls, value: float) -> float:
-        if value < 0:
-            raise ValueError("Price cannot be negative")
-        return value
-
-    @field_validator("country")
-    @classmethod
-    def validate_country(cls, value: str) -> str:
-        try:
-            pycountry.countries.search_fuzzy(value)
-        except Exception:
-            raise ValueError("Invalid country")
-        return value
-
-    @field_validator("state")
-    @classmethod
-    def validate_state(cls, value: str) -> str:
-        if not re.match(r"^[a-zA-Z\s\-']+$", value):
-            raise ValueError("Invalid state")
-        return value
-
-    @field_validator("city")
-    @classmethod
-    def validate_city(cls, value: str) -> str:
-        if not re.match(r"^[a-zA-Z\s\-']+$", value):
-            raise ValueError("Invalid city")
-        return value
-
-    @field_validator("available")
-    @classmethod
-    def validate_available(cls, value: str) -> str:
-        if value.upper() not in [e.value for e in AvailableStatus]:
-            raise ValueError("Invalid availability")
-        return value
-
-    @field_validator("pincode")
-    @classmethod
-    def validate_pincode(cls, value: str, info) -> str:
-        country = info.data.get("country")
-
-        if not country:
-            raise ValueError("Country required")
-
-        country_code = pycountry.countries.search_fuzzy(country)[0].alpha_2
-        pattern = postal_patterns.get(country_code)
-
-        if pattern and not re.match(pattern, value):
-            raise ValueError("Invalid postal code")
-
-        return value
-
-    @model_validator(mode="after")
-    def validate_lot(self) -> "LotCreate":
-        if not (-90 <= self.latitude <= 90):
-            raise ValueError("Invalid latitude range")
-
-        if not (-180 <= self.longitude <= 180):
-            raise ValueError("Invalid longitude range")
-
-        if not self.floors:
-            raise ValueError("At least one floor required")
-
-        seen = set()
-        for f in self.floors:
-            if f.floor_id in seen:
-                raise ValueError(f"Duplicate floor_id: {f.floor_id}")
-            seen.add(f.floor_id)
-
-            if f.total_spots <= 0:
-                raise ValueError("total_spots must be > 0")
-
-        return self
+from models import AvailableStatus, BookingStatus, Floor, ParkingLot, ParkingSpot
 
 
-def build_lot(payload: LotCreate, db: Session) -> ParkingLot:
-   
-    country_ = pycountry.countries.search_fuzzy(payload.country)[0]
+class FloorCreate(Schema):
+    floor_id = fields.Integer(required=True)
+    total_spots = fields.Integer(required=True)
+    available = fields.String(load_default="ACTIVE")
 
-    point = WKTElement(f"POINT({payload.longitude} {payload.latitude})", srid=4326)
+    @pre_load
+    def normalize_available(self, data: Any, **kwargs: Any) -> Any:
+        if isinstance(data, dict) and isinstance(data.get("available"), str):
+            data = dict(data)
+            data["available"] = data["available"].upper()
+        return data
 
+    @validates_schema
+    def validate_floor(self, data, **kwargs):
+        errors = {}
+        total_spots = data.get("total_spots")
+        if total_spots is not None and total_spots <= 0:
+            errors["total_spots"] = ["total_spots must be > 0"]
+        if errors:
+            raise ValidationError(errors)
+
+
+class LotCreate(Schema):
+    location_name = fields.String(required=True)
+    price = fields.Float(required=True)
+    country = fields.String(required=True)
+    city = fields.String(required=True)
+    state = fields.String(required=True)
+    address = fields.String(required=True)
+    pincode = fields.String(required=True)
+    available = fields.String(load_default="ACTIVE")
+    floors = fields.List(fields.Nested(FloorCreate), required=True)
+    latitude = fields.Float(required=True)
+    longitude = fields.Float(required=True)
+
+    @pre_load
+    def normalize_input(self, data: Any, **kwargs: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        normalized = {
+            key: value.strip() if isinstance(value, str) else value
+            for key, value in data.items()
+        }
+        if isinstance(normalized.get("available"), str):
+            normalized["available"] = normalized["available"].upper()
+        return normalized
+
+    @validates_schema
+    def validate_lot(self, data, **kwargs):
+        errors = {}
+        if data.get("price", 0) < 0:
+            errors["price"] = ["Price cannot be negative"]
+        country = data.get("country")
+        country_code = None
+        if country:
+            if not re.fullmatch(r"[a-zA-Z\s\-']+", data.get("state", "")):
+                errors["state"] = ["Invalid state"]
+            if not re.fullmatch(r"[a-zA-Z\s\-']+", data.get("city", "")):
+                errors["city"] = ["Invalid city"]
+            try:
+                country_code = pycountry.countries.search_fuzzy(country)[0].alpha_2
+            except LookupError:
+                errors["country"] = ["Invalid country"]
+        if data.get("available") not in {status.value for status in AvailableStatus}:
+            errors["available"] = ["Invalid availability"]
+        if country_code:
+            pattern = postal_patterns.get(country_code)
+            if pattern and not re.match(pattern, data.get("pincode", "")):
+                errors["pincode"] = ["Invalid postal code"]
+        if not -90 <= data.get("latitude", 0) <= 90:
+            errors["latitude"] = ["Invalid latitude range"]
+        if not -180 <= data.get("longitude", 0) <= 180:
+            errors["longitude"] = ["Invalid longitude range"]
+        floors = data.get("floors", [])
+        if not floors:
+            errors["floors"] = ["At least one floor required"]
+        floor_ids = [floor["floor_id"] for floor in floors]
+        if len(floor_ids) != len(set(floor_ids)):
+            errors["floors"] = ["Duplicate floor_id"]
+        if errors:
+            raise ValidationError(errors)
+
+
+def build_lot(payload: Any, db: Session) -> ParkingLot:
+    country = pycountry.countries.search_fuzzy(payload.country)[0]
+    point = WKTElement(
+        f"POINT({payload.longitude} {payload.latitude})", srid=4326
+    )
     lot = ParkingLot(
         location_name=payload.location_name,
         price=payload.price,
-        country=country_.alpha_2,
+        country=country.alpha_2,
         city=payload.city.lower(),
         state=payload.state.lower(),
         address=payload.address,
@@ -129,23 +117,19 @@ def build_lot(payload: LotCreate, db: Session) -> ParkingLot:
     )
 
     all_spots = []
-
     for floor_data in payload.floors:
         floor = Floor(
             floor_id=floor_data.floor_id,
             available=AvailableStatus(floor_data.available.upper()),
         )
         lot.floors.append(floor)
-
-        for i in range(1, floor_data.total_spots + 1):
+        for spot_number in range(1, floor_data.total_spots + 1):
             spot = ParkingSpot(
-                spot_id=i,
+                spot_id=spot_number,
                 floor=floor,
                 status=BookingStatus.SPOT_AVAILABLE,
                 available=AvailableStatus.ACTIVE,
             )
             all_spots.append(spot)
-
     db.bulk_save_objects(all_spots)
-
     return lot

@@ -31,6 +31,7 @@ _SCHEMA_MODULES = {
     "LotFloorSchema": "lotfloor",
     "UserCreate": "userschema",
     "UserRead": "userschema",
+    "UserSchema": "userschema",
     "FloorCreate": "lotschema",
     "LotCreate": "lotschema",
     "build_lot": "lotschema",

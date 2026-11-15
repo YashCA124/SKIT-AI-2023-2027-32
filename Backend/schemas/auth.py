@@ -1,62 +1,64 @@
-from typing import Optional
-from pydantic import BaseModel, EmailStr, field_validator
+from marshmallow import Schema, fields, pre_load
 
 
-class AdminLoginRequest(BaseModel):
-    username: str
-    password: str
+class AdminLoginRequest(Schema):
+    username = fields.String(required=True)
+    password = fields.String(required=True, load_only=True)
 
 
-class UserLoginRequest(BaseModel):
-    email: EmailStr
-    password: str
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
+class UserLoginRequest(Schema):
+    email = fields.Email(required=True)
+    password = fields.String(required=True, load_only=True)
+    latitude = fields.Float(allow_none=True, load_default=None)
+    longitude = fields.Float(allow_none=True, load_default=None)
 
-    @field_validator("email", "password", mode="before")
-    @classmethod
-    def strip_strings(cls, v):
-        return v.strip() if isinstance(v, str) else v
-
-
-class RegistrationRequest(BaseModel):
-
-    name: str
-    email: EmailStr
-    phone_no: str
-    password: str
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    address: Optional[str] = None
-    pincode: Optional[str] = None
-    location_permission_granted: bool = False
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
+    @pre_load
+    def strip_strings(self, data, **kwargs):
+        if isinstance(data, dict):
+            return {
+                key: value.strip() if isinstance(value, str) else value
+                for key, value in data.items()
+            }
+        return data
 
 
-class TokenResponse(BaseModel):
-    access_token: str
+class RegistrationRequest(Schema):
+    name = fields.String(required=True)
+    email = fields.Email(required=True)
+    phone_no = fields.String(required=True)
+    password = fields.String(required=True, load_only=True)
+    city = fields.String(allow_none=True, load_default=None)
+    state = fields.String(allow_none=True, load_default=None)
+    country = fields.String(allow_none=True, load_default=None)
+    address = fields.String(allow_none=True, load_default=None)
+    pincode = fields.String(allow_none=True, load_default=None)
+    location_permission_granted = fields.Boolean(load_default=False)
+    latitude = fields.Float(allow_none=True, load_default=None)
+    longitude = fields.Float(allow_none=True, load_default=None)
 
 
-class LocationOut(BaseModel):
-    latitude: float
-    longitude: float
+class TokenResponse(Schema):
+    access_token = fields.String(required=True)
 
 
-class UserOut(BaseModel):
-    id: int
-    name: str
-    role: str
+class LocationOut(Schema):
+    latitude = fields.Float(required=True)
+    longitude = fields.Float(required=True)
 
 
-class LoginResponse(BaseModel):
-    message: str
-    access_token: str
-    refresh_token: str
-    user: UserOut
+class UserOut(Schema):
+    id = fields.Integer(required=True)
+    name = fields.String(required=True)
+    role = fields.String(required=True)
+
+
+class LoginResponse(Schema):
+    message = fields.String(required=True)
+    access_token = fields.String(required=True)
+    refresh_token = fields.String(required=True)
+    user = fields.Nested(UserOut, required=True)
 
 
 class UserLoginResponse(LoginResponse):
-    location_updated: bool
-    current_location: Optional[LocationOut] = None
+    location_updated = fields.Boolean(required=True)
+    current_location = fields.Nested(LocationOut, allow_none=True, load_default=None)

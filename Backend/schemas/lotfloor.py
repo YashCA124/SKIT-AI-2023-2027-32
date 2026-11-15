@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from marshmallow import Schema, fields, validate
 
 
-class LotFloorSchema(BaseModel):
-    lot_id: int = Field(gt=0)
-    floor_id: int = Field(ge=-10, le=50)
+class LotFloorSchema(Schema):
+    lot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    floor_id = fields.Integer(required=True, validate=validate.Range(min=-10, max=50))

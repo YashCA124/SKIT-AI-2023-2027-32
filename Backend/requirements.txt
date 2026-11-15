@@ -7,7 +7,11 @@ geoalchemy2
 shapely
 redis
 python-jose[cryptography]
-pydantic[email]
 werkzeug
 geopy
 python-multipart
+marshmallow
+phonenumbers
+pycountry
+zxcvbn
+tzdata

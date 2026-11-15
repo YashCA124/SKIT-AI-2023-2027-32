@@ -6,7 +6,6 @@ from core.security import (
     get_current_refresh_claims,
 )
 from schemas.auth import TokenResponse
-
 router = APIRouter(tags=["tokenauth"])
 
 @router.get("/protected")
@@ -17,10 +16,10 @@ def protected_route(claims: dict = Depends(get_current_claims)):
         "role": claims.get("role"),
     }
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/refresh")
 def token_refresh(claims: dict = Depends(get_current_refresh_claims)):
     new_access_token = create_access_token(
         identity=claims.get("sub"),
         additional_claims={"role": claims.get("role")},
     )
-    return {"access_token": new_access_token}
+    return TokenResponse().dump({"access_token": new_access_token})

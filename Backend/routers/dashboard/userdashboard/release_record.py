@@ -7,10 +7,9 @@ from core.role_check import require_role
 from core.redis_client import redis_client
 from models import ParkingBooking, ParkingSpot, Floor, UserType, BookingStatus, User
 from schemas import ReleasedRecordResponse
-
 router = APIRouter(prefix="/records", tags=["Released Records"])
 
-@router.get("/released", response_model=ReleasedRecordResponse)
+@router.get("/released")
 def get_released_records(
     current_user: User = Depends(require_role(UserType.PARKING_USER)),
     db: Session = Depends(get_db)
@@ -23,7 +22,7 @@ def get_released_records(
         cached_data = None
 
     if cached_data:
-        return json.loads(cached_data)
+        return ReleasedRecordResponse().dump(json.loads(cached_data))
 
     records = (
         db.query(ParkingBooking)
@@ -63,4 +62,4 @@ def get_released_records(
     except Exception:
         pass
 
-    return result
+    return ReleasedRecordResponse().dump(result)

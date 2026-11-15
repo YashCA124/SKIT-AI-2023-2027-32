@@ -1,66 +1,44 @@
-from datetime import datetime
-from typing import Optional
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from pydantic import BaseModel, field_validator, model_validator
+from marshmallow import Schema, ValidationError, fields, validate, validates_schema
 
 
-class BookingCreateSchema(BaseModel):
-    lot_id: int
-    floor_id: int
-    spot_id: int
+class BookingCreateSchema(Schema):
+    lot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    floor_id = fields.Integer(required=True, validate=validate.Range(min=-10, max=50))
+    spot_id = fields.Integer(required=True, validate=validate.Range(min=1))
+    timezone = fields.String(load_default="UTC")
+    parking_timestamp = fields.DateTime(allow_none=True, load_default=None)
+    leaving_timestamp = fields.DateTime(allow_none=True, load_default=None)
 
-    timezone: str = "UTC"
-
-    parking_timestamp: Optional[datetime] = None
-    leaving_timestamp: Optional[datetime] = None
-
-    @field_validator("lot_id")
-    @classmethod
-    def validate_lot_id(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("Invalid lot_id")
-        return value
-
-    @field_validator("floor_id")
-    @classmethod
-    def validate_floor_id(cls, value: int) -> int:
-        if value < -10 or value > 50:
-            raise ValueError("Invalid floor_id")
-        return value
-
-    @field_validator("spot_id")
-    @classmethod
-    def validate_spot_id(cls, value: int) -> int:
-        if value <= 0:
-            raise ValueError("Invalid spot_id")
-        return value
-
-    @field_validator("timezone")
-    @classmethod
-    def validate_timezone(cls, value: str) -> str:
+    @validates_schema
+    def validate_timestamps(self, data, **kwargs):
+        timezone = data["timezone"]
         try:
-            ZoneInfo(value)
-        except Exception:
-            raise ValueError("Invalid timezone")
-        return value
+            ZoneInfo(timezone)
+        except ZoneInfoNotFoundError as exc:
+            raise ValidationError({"timezone": ["Invalid timezone"]}) from exc
 
-    @model_validator(mode="after")
-    def validate_timestamps(self) -> "BookingCreateSchema":
-        pt, lt = self.parking_timestamp, self.leaving_timestamp
-        if pt and lt and (pt.tzinfo is None) == (lt.tzinfo is None) and lt <= pt:
-            raise ValueError("leaving_timestamp must be after parking_timestamp")
-        return self
-
-
-# --- response model for POST /user/booking ---------------------------------
-class BookingCreated(BaseModel):
-    booking_id: int
-    spot: str
-    cost: float
-    parking_timestamp: Optional[str] = None
+        parking = data.get("parking_timestamp")
+        leaving = data.get("leaving_timestamp")
+        if (
+            parking
+            and leaving
+            and (parking.tzinfo is None) == (leaving.tzinfo is None)
+            and leaving <= parking
+        ):
+            raise ValidationError(
+                {"leaving_timestamp": ["leaving_timestamp must be after parking_timestamp"]}
+            )
 
 
-class BookingCreateResponse(BaseModel):
-    message: str
-    booking: BookingCreated
+class BookingCreated(Schema):
+    booking_id = fields.Integer(required=True)
+    spot = fields.String(required=True)
+    cost = fields.Float(required=True)
+    parking_timestamp = fields.String(allow_none=True, load_default=None)
+
+
+class BookingCreateResponse(Schema):
+    message = fields.String(required=True)
+    booking = fields.Nested(BookingCreated, required=True)

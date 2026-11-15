@@ -1,21 +1,15 @@
-from typing import Optional
-
-from pydantic import BaseModel
-
-from ._common import ORM_CONFIG
+from marshmallow import Schema, fields
 
 
-class User(BaseModel):
-    """Output schema for a user row (no password / location)."""
+class User(Schema):
+    """Output schema for a user row (no password or location)."""
 
-    model_config = ORM_CONFIG
-
-    id: int
-    name: str
-    email: str
-    phone_no: str
-    country: Optional[str] = None
-    state: Optional[str] = None
-    city: Optional[str] = None
-    address: Optional[str] = None
-    pincode: Optional[str] = None
+    id = fields.Integer()
+    name = fields.String()
+    email = fields.String()
+    phone_no = fields.String()
+    country = fields.String(allow_none=True)
+    state = fields.String(allow_none=True)
+    city = fields.String(allow_none=True)
+    address = fields.String(allow_none=True)
+    pincode = fields.String(allow_none=True)

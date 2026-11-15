@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_user_role
 from models import (
     AvailableStatus,
@@ -19,7 +20,7 @@ router = APIRouter(tags=["merchant"])
 
 @router.post("/blockspot")
 def block_spot(
-    payload: AllID,
+    payload: dict = load_body(AllID),
     current_user: User = Depends(
         require_user_role(UserType.MERCHANT)
     ),

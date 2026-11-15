@@ -12,6 +12,7 @@ from geoalchemy2.shape import to_shape
 from geopy.geocoders import Nominatim
 
 from core.db import get_db
+from schemas._common import load_body
 
 from core.security import (
     create_access_token,
@@ -36,8 +37,10 @@ router = APIRouter(tags=["auth"])
 geolocator = Nominatim(user_agent="parkwise-local-app", timeout=5)
 
 
-@router.post("/adminlogin", response_model=LoginResponse)
-def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
+@router.post("/adminlogin")
+def admin_login(
+    payload: dict = load_body(AdminLoginRequest), db: Session = Depends(get_db)
+):
     admin = (
         db.query(Admin)
         .filter_by(username=payload.username, password=payload.password)
@@ -54,15 +57,23 @@ def admin_login(payload: AdminLoginRequest, db: Session = Depends(get_db)):
         identity=admin.username, additional_claims={"role": UserType.ADMIN.value}
     )
 
-    return {
-        "message": "Login successful",
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "user": {"id": admin.id, "name": getattr(admin, "username", ""), "role": UserType.ADMIN.value},
-    }
+    return LoginResponse().dump(
+        {
+            "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "user": {
+                "id": admin.id,
+                "name": getattr(admin, "username", ""),
+                "role": UserType.ADMIN.value,
+            },
+        }
+    )
 
-@router.post("/userlogin", response_model=UserLoginResponse)
-def user_login(payload: UserLoginRequest, db: Session = Depends(get_db)):
+@router.post("/userlogin")
+def user_login(
+    payload: dict = load_body(UserLoginRequest), db: Session = Depends(get_db)
+):
     user = db.query(User).filter_by(email=payload.email).first()
 
     if not user or not check_password_hash(user.password, payload.password):
@@ -98,18 +109,22 @@ def user_login(payload: UserLoginRequest, db: Session = Depends(get_db)):
         except Exception:
             current_location = None
 
-    return {
-        "message": "Login successful",
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "location_updated": location_updated,
-        "current_location": current_location,
-        "user": {"id": user.id, "name": user.name, "role": role},
-    }
+    return UserLoginResponse().dump(
+        {
+            "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "location_updated": location_updated,
+            "current_location": current_location,
+            "user": {"id": user.id, "name": user.name, "role": role},
+        }
+    )
 
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
-def registration(payload: RegistrationRequest, db: Session = Depends(get_db)):
+def registration(
+    payload: dict = load_body(RegistrationRequest), db: Session = Depends(get_db)
+):
     if db.query(User).filter_by(email=payload.email).first():
         raise HTTPException(status_code=409, detail="Email already exists")
 

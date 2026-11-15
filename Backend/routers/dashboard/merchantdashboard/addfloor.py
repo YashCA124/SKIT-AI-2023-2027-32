@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_user_role
 from models import (
     AvailableStatus,
@@ -20,7 +21,7 @@ router = APIRouter(tags=["merchant"])
 
 @router.post("/addfloor", status_code=status.HTTP_201_CREATED)
 def add_floor(
-    payload: AddFloorSchema,
+    payload: dict = load_body(AddFloorSchema),
     current_user: User = Depends(
         require_user_role(UserType.MERCHANT)
     ),

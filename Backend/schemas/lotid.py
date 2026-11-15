@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
+from marshmallow import Schema, fields, validate
 
 
-class LotID(BaseModel):
-    lot_id: int = Field(gt=0, description="Only positive lot IDs allowed")
+class LotID(Schema):
+    lot_id = fields.Integer(
+        required=True, validate=validate.Range(min=1, error="Only positive lot IDs allowed")
+    )

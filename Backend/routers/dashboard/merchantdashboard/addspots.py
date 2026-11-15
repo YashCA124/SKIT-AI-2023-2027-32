@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from core.db import get_db
+from schemas._common import load_body
 from core.role_check import require_user_role
 from models import Floor, ParkingLot, ParkingSpot, User, UserType
 from schemas import AddSpotsSchema
@@ -12,7 +13,7 @@ router = APIRouter(tags=["merchant"])
 
 @router.post("/addspots", status_code=status.HTTP_200_OK)
 def add_spots(
-    payload: AddSpotsSchema,
+    payload: dict = load_body(AddSpotsSchema),
     current_user: User = Depends(
         require_user_role(UserType.MERCHANT)
     ),

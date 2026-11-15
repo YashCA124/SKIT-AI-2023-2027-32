@@ -20,6 +20,7 @@ from models import UserType
 from routers.auth import registration
 from redis.exceptions import RedisError
 from schemas.auth import RegistrationRequest
+from schemas._common import load_payload
 from sqlalchemy.exc import SQLAlchemyError
 
 
@@ -82,17 +83,20 @@ class HealthContractTests(unittest.TestCase):
         db = MagicMock()
         db.query.return_value.filter_by.return_value.first.return_value = None
         db.refresh.side_effect = lambda user: setattr(user, "id", 101)
-        payload = RegistrationRequest(
-            name="Smoke Test",
-            email="smoke@example.com",
-            phone_no="9991234567",
-            password="test-password",
-            city="Jaipur",
-            state="Rajasthan",
-            country="IN",
-            location_permission_granted=True,
-            latitude=26.9124,
-            longitude=75.7873,
+        payload = load_payload(
+            RegistrationRequest,
+            {
+                "name": "Smoke Test",
+                "email": "smoke@example.com",
+                "phone_no": "9991234567",
+                "password": "unit-test-password",
+                "city": "Jaipur",
+                "state": "Rajasthan",
+                "country": "IN",
+                "location_permission_granted": True,
+                "latitude": 26.9124,
+                "longitude": 75.7873,
+            },
         )
 
         result = registration(payload, db)
