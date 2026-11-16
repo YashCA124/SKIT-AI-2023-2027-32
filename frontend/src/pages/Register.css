@@ -6,9 +6,11 @@
 .checkbox-field { display: flex !important; align-items: flex-start; gap: 9px !important; color: #637084 !important; font-size: .76rem !important; font-weight: 500 !important; line-height: 1.5; }
 .checkbox-field input { width: 17px; height: 17px; flex: 0 0 17px; margin: 1px 0 0; accent-color: #4264e8; }
 .field-hint { margin: -3px 0 0; color: #8994a4; font-size: .72rem; line-height: 1.5; }
+.merchant-registration-note { margin: -8px 0 16px; border-left: 3px solid #526ee8; padding: 8px 12px; background: #f4f6ff; }
 
 :root[data-theme='dark'] .form-grid label { color: #c3ccda; }
 :root[data-theme='dark'] .form-grid input { border-color: #3a4658; background: #141c28; color: #e5eaf3; }
+:root[data-theme='dark'] .merchant-registration-note { background: #202a42; color: #bdc9e6; }
 
 @media (max-width: 480px) {
   .form-grid { grid-template-columns: minmax(0, 1fr); }
