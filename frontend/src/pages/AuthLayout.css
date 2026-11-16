@@ -13,6 +13,9 @@
 .auth-card { border: 1px solid #e8ecf3; border-radius: 18px; padding: clamp(24px, 3.5vw, 38px); background: #fff; box-shadow: 0 10px 34px #253a620c; }
 .auth-card__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 27px; }
 .auth-card__tools { display: grid; justify-items: end; gap: 9px; }
+.account-type-control { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 0 0 23px; border: 1px solid #e7ebf2; border-radius: 10px; padding: 4px; background: #f6f8fb; }
+.account-type-control button { min-height: 36px; border: 0; border-radius: 7px; background: transparent; color: #69768a; font-size: .72rem; font-weight: 700; }
+.account-type-control button.account-type-control__active { background: #fff; color: #3458d2; box-shadow: 0 1px 4px #1b2b4518; }
 .secure-label { color: #98a2b1; font-size: .61rem; font-weight: 800; letter-spacing: .1em; }
 .auth-card h2 { margin: 0; color: #1c2940; font-size: 1.62rem; letter-spacing: -.05em; }
 .form-intro { margin: 8px 0 22px; color: #7a8696; font-size: .9rem; line-height: 1.55; }
@@ -32,6 +35,9 @@
 :root[data-theme='dark'] .auth-trust-note { border-color: #36435a; background: #1a2433; color: #aebbd0; }
 :root[data-theme='dark'] .auth-trust-note strong { color: #e1e8f4; }
 :root[data-theme='dark'] .auth-card { border-color: #303b4c; background: #1a2331; box-shadow: 0 10px 34px #0002; }
+:root[data-theme='dark'] .account-type-control { border-color: #354052; background: #141c28; }
+:root[data-theme='dark'] .account-type-control button { color: #aab5c7; }
+:root[data-theme='dark'] .account-type-control button.account-type-control__active { background: #29385b; color: #d6e0ff; }
 :root[data-theme='dark'] .auth-card form > label { color: #c3ccda; }
 :root[data-theme='dark'] .auth-card input { border-color: #3a4658; background: #141c28; color: #e5eaf3; }
 :root[data-theme='dark'] .app-shell { background: #111722; color: #e5eaf3; }

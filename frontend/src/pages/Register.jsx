@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { registerUser } from '../api/auth.js'
 import useAuth from '../auth/useAuth.js'
 import Alert from '../components/Alert.jsx'
@@ -25,13 +25,17 @@ function getBrowserLocation() {
 }
 
 export default function Register() {
+  const navigate = useNavigate()
+  const locationState = useLocation()
+  const [accountType, setAccountType] = useState(
+    locationState.state?.accountType === 'merchant' ? 'merchant' : 'user',
+  )
   const [pending, setPending] = useState(false)
   const [notice, setNotice] = useState('')
   const [shareLocation, setShareLocation] = useState(false)
   const [location, setLocation] = useState(null)
   const [locationPending, setLocationPending] = useState(false)
   const locationRequestId = useRef(0)
-  const navigate = useNavigate()
   const { authNotice, clearAuthNotice } = useAuth()
 
   async function handleLocationChange(event) {
@@ -82,7 +86,13 @@ export default function Register() {
       }
       if (shareLocation && location) Object.assign(payload, location)
       const result = await registerUser(payload)
-      navigate('/login', { replace: true, state: { successNotice: result.message || 'Account created. Sign in to continue.' } })
+      const successNotice = accountType === 'merchant'
+        ? 'Account created. Merchant access must be enabled by an administrator before you can sign in as a merchant.'
+        : result.message || 'Account created. Sign in to continue.'
+      navigate('/login', {
+        replace: true,
+        state: { accountType, successNotice },
+      })
     } catch (error) {
       setNotice(error.message)
     } finally {
@@ -92,9 +102,30 @@ export default function Register() {
 
   return (
     <AuthLayout>
+      <div className="account-type-control" role="group" aria-label="Registration account type">
+        {[
+          ['user', 'User'],
+          ['merchant', 'Merchant'],
+        ].map(([type, label]) => (
+          <button
+            key={type}
+            className={accountType === type ? 'account-type-control__active' : ''}
+            type="button"
+            aria-pressed={accountType === type}
+            onClick={() => { clearAuthNotice(); setAccountType(type); setNotice('') }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
       <p className="eyebrow">Create an account</p>
-      <h2 id="auth-title">Register with Parkwise</h2>
+      <h2 id="auth-title">Register as {accountType}</h2>
       <p className="form-intro">Enter your details to register through the connected API.</p>
+      {accountType === 'merchant' && (
+        <p className="field-hint merchant-registration-note">
+          Merchant access requires administrator approval. Registration creates your account, and an administrator must enable merchant access before you can use merchant features.
+        </p>
+      )}
       <Alert kind={notice ? 'error' : location ? 'success' : 'error'}>{notice || authNotice || (location ? 'Location permission granted. Your coordinates will be included with registration.' : '')}</Alert>
       <form onSubmit={handleSubmit}>
         <label>Full name<input name="name" autoComplete="name" required maxLength={100} placeholder="Your name" /></label>
@@ -116,7 +147,7 @@ export default function Register() {
         </div>
         <button className="primary-button" type="submit" disabled={pending || locationPending}>{pending ? 'Please wait…' : 'Create account'}</button>
       </form>
-      <p className="switch-prompt">Already have an account? <Link className="text-button" to="/login">Sign in</Link></p>
+      <p className="switch-prompt">Already have an account? <Link className="text-button" to="/login" state={{ accountType }}>Sign in as {accountType}</Link></p>
     </AuthLayout>
   )
 }
